@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugs Electronics - Ask Sigma</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #0c0c1d 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .particle {
+            position: absolute;
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+            opacity: 0.1;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .container {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 128, 255, 0.1) 100%);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            padding: 10px 20px;
+            text-align: center;
+            position: relative;
+            flex-shrink: 0;
+            min-height: 140px;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ffff, #0080ff, transparent);
+            animation: scan 3s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .logo i {
+            font-size: 1.8rem;
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .company-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #00ffff, #0080ff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+        }
+        
+        .tagline {
+            font-size: 0.7rem;
+            opacity: 0.8;
+            font-weight: 300;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+        
+        .user-email {
+            color: #00ffff;
+            font-weight: 600;
+        }
+        
+        .logout-btn {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            border: none;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
+        }
+        
+        .nav-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            padding: 8px 20px 0px 20px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            border: none;
+            color: #fff;
+            padding: 6px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(108, 117, 125, 0.3);
+        }
+        
+        .nav-btn.active {
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            color: #000;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            padding: 8px 20px 0px 20px;
+            flex-wrap: wrap;
+        }
+        
+        .selector-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .selector-label {
+            font-size: 11px;
+            color: #00ffff;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+        
+        .selector-dropdown {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 128, 255, 0.1));
+            border: 1px solid rgba(0, 255, 255, 0.4);
+            color: #00ffff;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+            min-width: 80px;
+        }
+        
+        .questions-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 20px;
+            overflow-y: auto;
+        }
+        
+        .custom-question-container {
+            margin-bottom: 30px;
+        }
+        
+        .custom-question-card {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.15) 0%, rgba(0, 128, 255, 0.15) 100%);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(0, 255, 255, 0.4);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.1);
+        }
+        
+        .custom-question-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #00ffff, #0080ff, #00ffff, transparent);
+            animation: scan 4s linear infinite;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            align-items: stretch;
+        }
+        
+        .custom-input {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5));
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            color: #ffffff;
+            padding: 15px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .custom-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .custom-input:focus {
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
+        }
+        
+        .ask-btn {
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            border: none;
+            color: #000;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .ask-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .ask-btn:hover::before {
+            left: 100%;
+        }
+        
+        .ask-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 255, 255, 0.4);
+        }
+        
+        .ask-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .section-divider {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+        }
+        
+        .section-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent);
+        }
+        
+        .section-divider span {
+            background: linear-gradient(135deg, #0c0c1d 0%, #1a1a2e 50%, #16213e 100%);
+            padding: 0 20px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        
+        .questions-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .question-card {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 128, 255, 0.1) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .question-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ffff, #0080ff, transparent);
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
+        }
+        
+        .question-card:hover::before {
+            transform: translateX(100%);
+        }
+        
+        .question-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 255, 255, 0.2);
+            border-color: #00ffff;
+        }
+        
+        .question-icon {
+            font-size: 2rem;
+            color: #00ffff;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .question-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #00ffff;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        
+        .question-description {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.4;
+        }
+        
+        .embed-container {
+            flex: 1;
+            position: relative;
+            margin: 0;
+            background: rgba(0, 0, 0, 0.4);
+            border: none;
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.1);
+            display: none;
+        }
+        
+        .embed-container.active {
+            display: block;
+        }
+        
+        .loading {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            font-size: 1.2rem;
+            color: #00ffff;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 255, 255, 0.3);
+            border-top: 3px solid #00ffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .back-btn {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            border: none;
+            color: #000;
+            padding: 8px 24px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            align-self: flex-start;
+        }
+        
+        .back-btn.active {
+            display: flex;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 107, 53, 0.3);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 128, 255, 0.2));
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            color: #00ffff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .notification.success {
+            border-color: rgba(40, 167, 69, 0.5);
+            color: #28a745;
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.2), rgba(32, 201, 151, 0.2));
+        }
+
+        .notification.error {
+            border-color: rgba(220, 53, 69, 0.5);
+            color: #dc3545;
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.2), rgba(255, 0, 100, 0.2));
+        }
+        
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #00ffff, #0080ff, #00ffff);
+            opacity: 0.7;
+        }
+        
+        @media (max-width: 768px) {
+            .questions-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .company-name {
+                font-size: 1.4rem;
+                letter-spacing: 1px;
+            }
+            
+            .logo i {
+                font-size: 1.5rem;
+            }
+            
+            .header {
+                padding: 8px 15px;
+                min-height: 140px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .ask-btn {
+                align-self: center;
+                padding: 15px 30px;
+            }
+            
+            .custom-question-card {
+                padding: 20px;
+            }
+
+            .user-info {
+                top: 5px;
+                right: 10px;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation" id="bgAnimation"></div>
+    <div class="notification" id="notification"></div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="user-info">
+                <span class="user-email" id="userEmail">Loading...</span>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+                <h1 class="company-name">Plugs Electronics</h1>
+            </div>
+            <p class="tagline">Ask Sigma</p>
+            <div class="nav-controls">
+                <a href="/" class="nav-btn">
+                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                </a>
+                <a href="/ask" class="nav-btn active">
+                    <i class="fas fa-brain"></i>Ask Sigma
+                </a>
+            </div>
+            <div class="controls">
+                <div class="selector-group">
+                    <label class="selector-label">Region:</label>
+                    <select class="selector-dropdown" id="regionSelect">
+                        <option value="East">East</option>
+                        <option value="West">West</option>
+                    </select>
+                </div>
+                <div class="selector-group">
+                    <label class="selector-label">Environment:</label>
+                    <select class="selector-dropdown" id="environmentSelect">
+                        <option value="Production">Production</option>
+                        <option value="Development">Development</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="questions-section" id="questionsSection">
+            <button class="back-btn" id="backBtn" onclick="showQuestions()">
+                <i class="fas fa-arrow-left"></i>Back to Questions
+            </button>
+            
+            <div class="custom-question-container">
+                <div class="custom-question-card">
+                    <i class="fas fa-edit question-icon"></i>
+                    <div class="question-title">Ask Your Own Question</div>
+                    <div class="question-description">Enter a custom question to ask Sigma about your data</div>
+                    <div class="input-group">
+                        <input type="text" id="customQuestionInput" placeholder="e.g., What were my top selling products in Q4?" class="custom-input">
+                        <button class="ask-btn" onclick="askCustomQuestion()">
+                            <i class="fas fa-paper-plane"></i> Ask Sigma
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section-divider">
+                <span>Or choose from these popular questions:</span>
+            </div>
+            
+            <div class="questions-container" id="questionsContainer">
+                <div class="question-card" onclick="loadAskSigma('What were my sales this year?')">
+                    <i class="fas fa-chart-line question-icon"></i>
+                    <div class="question-title">Annual Sales Performance</div>
+                    <div class="question-description">Analyze your total sales performance for the current year</div>
+                </div>
+                
+                <div class="question-card" onclick="loadAskSigma('Which region had the highest sales last quarter?')">
+                    <i class="fas fa-globe-americas question-icon"></i>
+                    <div class="question-title">Top Performing Region</div>
+                    <div class="question-description">Identify which region achieved the highest sales in the last quarter</div>
+                </div>
+                
+                <div class="question-card" onclick="loadAskSigma('What are the top 5 products by revenue?')">
+                    <i class="fas fa-trophy question-icon"></i>
+                    <div class="question-title">Best Selling Products</div>
+                    <div class="question-description">Discover your top 5 revenue-generating products</div>
+                </div>
+                
+                <div class="question-card" onclick="loadAskSigma('Show me sales trends over the past 6 months')">
+                    <i class="fas fa-chart-area question-icon"></i>
+                    <div class="question-title">Sales Trends Analysis</div>
+                    <div class="question-description">View sales performance trends over the last 6 months</div>
+                </div>
+                
+                <div class="question-card" onclick="loadAskSigma('What is the average order value by region?')">
+                    <i class="fas fa-calculator question-icon"></i>
+                    <div class="question-title">Average Order Value</div>
+                    <div class="question-description">Calculate average order value across different regions</div>
+                </div>
+                
+                <div class="question-card" onclick="loadAskSigma('Which customers had the highest purchase volume?')">
+                    <i class="fas fa-users question-icon"></i>
+                    <div class="question-title">Top Customers</div>
+                    <div class="question-description">Identify customers with the highest purchase volumes</div>
+                </div>
+                
+                <div class="question-card" onclick="loadAskSigma('How do sales compare year over year?')">
+                    <i class="fas fa-balance-scale question-icon"></i>
+                    <div class="question-title">Year-over-Year Comparison</div>
+                    <div class="question-description">Compare current sales performance with previous year</div>
+                </div>
+                
+                <div class="question-card" onclick="loadAskSigma('What are the seasonal trends in our sales?')">
+                    <i class="fas fa-calendar-alt question-icon"></i>
+                    <div class="question-title">Seasonal Patterns</div>
+                    <div class="question-description">Analyze seasonal trends and patterns in sales data</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="embed-container" id="embedContainer">
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <div>Loading Ask Sigma...</div>
+            </div>
+            <iframe id="ask-sigma-embed" style="display: none;" allowfullscreen></iframe>
+        </div>
+    </div>
+    
+    <div class="status-bar"></div>
+
+    <script>
+        let currentUserEmail = '';
+
+        function checkAuthentication() {
+            const userEmail = localStorage.getItem('userEmail');
+            if (!userEmail) {
+                window.location.href = '/login';
+                return false;
+            }
+            currentUserEmail = userEmail;
+            document.getElementById('userEmail').textContent = userEmail;
+            return true;
+        }
+
+        function logout() {
+            localStorage.removeItem('userEmail');
+            showNotification('Logged out successfully', 'success');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 1000);
+        }
+
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification ' + type + ' show';
+            setTimeout(function() {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        function createParticles() {
+            const bgAnimation = document.getElementById('bgAnimation');
+            const particleCount = 20;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.width = Math.random() * 4 + 2 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                bgAnimation.appendChild(particle);
+            }
+        }
+        
+        function showQuestions() {
+            document.getElementById('questionsSection').style.display = 'flex';
+            document.getElementById('embedContainer').classList.remove('active');
+            document.getElementById('backBtn').classList.remove('active');
+        }
+        
+        function askCustomQuestion() {
+            const input = document.getElementById('customQuestionInput');
+            const question = input.value.trim();
+            
+            if (!question) {
+                showNotification('Please enter a question first', 'error');
+                input.focus();
+                return;
+            }
+            
+            if (question.length < 5) {
+                showNotification('Please enter a more detailed question', 'error');
+                input.focus();
+                return;
+            }
+            
+            loadAskSigma(question);
+            input.value = ''; // Clear the input after asking
+        }
+        
+        function loadAskSigma(question) {
+            const loading = document.getElementById('loading');
+            const iframe = document.getElementById('ask-sigma-embed');
+            const regionSelect = document.getElementById('regionSelect');
+            const environmentSelect = document.getElementById('environmentSelect');
+            const questionsSection = document.getElementById('questionsSection');
+            const embedContainer = document.getElementById('embedContainer');
+            const backBtn = document.getElementById('backBtn');
+            
+            const region = regionSelect.value;
+            const environment = environmentSelect.value;
+            
+            // Show embed container and hide questions
+            questionsSection.style.display = 'none';
+            embedContainer.classList.add('active');
+            backBtn.classList.add('active');
+            
+            // Show loading
+            loading.style.display = 'flex';
+            iframe.style.display = 'none';
+            
+            showNotification('Loading Ask Sigma with your question...', 'success');
+            
+            // Get signed URL for Ask Sigma with user email
+            const url = `/api/ask-sigma-url?region=${region}&environment=${environment}&question=${encodeURIComponent(question)}&email=${encodeURIComponent(currentUserEmail)}`;
+            
+            fetch(url)
+                .then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('HTTP error! status: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.url) {
+                        iframe.src = data.url;
+                        
+                        iframe.onload = function() {
+                            loading.style.display = 'none';
+                            iframe.style.display = 'block';
+                        };
+                        
+                        iframe.onerror = function() {
+                            throw new Error('Failed to load Ask Sigma iframe');
+                        };
+                        
+                        // Fallback timeout
+                        setTimeout(function() {
+                            if (iframe.style.display === 'none') {
+                                loading.style.display = 'none';
+                                iframe.style.display = 'block';
+                            }
+                        }, 10000);
+                        
+                        console.log('Ask Sigma loading with question:', question);
+                        console.log('User:', currentUserEmail);
+                        
+                    } else {
+                        throw new Error(data.error || 'No URL received from server');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error loading Ask Sigma:', error);
+                    loading.style.display = 'none';
+                    showNotification('Failed to load Ask Sigma: ' + error.message, 'error');
+                    
+                    // Show questions again on error
+                    showQuestions();
+                });
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!checkAuthentication()) {
+                return;
+            }
+            createParticles();
+            
+            const customInput = document.getElementById('customQuestionInput');
+            if (customInput) {
+                customInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        askCustomQuestion();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
