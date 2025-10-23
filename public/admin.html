@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugs Electronics - Admin Panel</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #0c0c1d 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .particle {
+            position: absolute;
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+            opacity: 0.1;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .container {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 128, 255, 0.1) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ffff, #0080ff, transparent);
+            animation: scan 3s linear infinite;
+            border-radius: 20px 20px 0 0;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ff6b35, #f7931e, #ff6b35);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-top: 10px;
+            color: #00ffff;
+        }
+        
+        .nav-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            border: none;
+            color: #fff;
+            padding: 8px 24px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(108, 117, 125, 0.3);
+        }
+        
+        .nav-btn.active {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .user-list-panel {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 128, 255, 0.1) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+        }
+        
+        .panel-title {
+            font-size: 1.2rem;
+            color: #00ffff;
+            font-weight: 600;
+        }
+        
+        .add-user-btn {
+            background: linear-gradient(45deg, #27ae60, #229954);
+            border: none;
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .add-user-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .search-box {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+        
+        .user-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .user-item {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(0, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .user-item:hover {
+            background: rgba(0, 255, 255, 0.1);
+            border-color: rgba(0, 255, 255, 0.3);
+            transform: translateX(5px);
+        }
+        
+        .user-item.active {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(247, 147, 30, 0.2));
+            border-color: #ff6b35;
+        }
+        
+        .user-email {
+            color: #00ffff;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .user-meta {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+        }
+        
+        .config-panel {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 128, 255, 0.1) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+        }
+        
+        .no-selection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .no-selection i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+        
+        .form-section {
+            margin-bottom: 25px;
+        }
+        
+        .form-label {
+            display: block;
+            color: #00ffff;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .form-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+        
+        .multi-select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .checkbox-item:hover {
+            background: rgba(0, 255, 255, 0.1);
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 10px;
+            accent-color: #00ffff;
+        }
+        
+        .checkbox-item label {
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .attribute-values {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .attribute-value-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-save {
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            color: #000;
+        }
+        
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 255, 255, 0.3);
+        }
+        
+        .btn-delete {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: #fff;
+        }
+        
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(231, 76, 60, 0.3);
+        }
+        
+        .btn-cancel {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            color: #fff;
+        }
+        
+        .btn-cancel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(108, 117, 125, 0.3);
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-top: 2px solid #00ffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 128, 255, 0.2));
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            color: #00ffff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .notification.success {
+            border-color: rgba(40, 167, 69, 0.5);
+            color: #28a745;
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.2), rgba(32, 201, 151, 0.2));
+        }
+
+        .notification.error {
+            border-color: rgba(220, 53, 69, 0.5);
+            color: #dc3545;
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.2), rgba(255, 0, 100, 0.2));
+        }
+        
+        .user-type-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+        
+        .badge-internal {
+            background: rgba(155, 89, 182, 0.2);
+            border: 1px solid rgba(155, 89, 182, 0.4);
+            color: #9b59b6;
+        }
+        
+        .badge-external {
+            background: rgba(39, 174, 96, 0.2);
+            border: 1px solid rgba(39, 174, 96, 0.4);
+            color: #27ae60;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .user-list-panel {
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation" id="bgAnimation"></div>
+    <div class="notification" id="notification"></div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-user-shield"></i>
+                <h1 class="page-title">Admin Panel</h1>
+            </div>
+            <p class="subtitle">User Configuration Management</p>
+            <div class="nav-controls">
+                <a href="/workbooks" class="nav-btn">
+                    <i class="fas fa-book"></i>Workbooks
+                </a>
+                <a href="/" class="nav-btn">
+                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                </a>
+                <a href="/admin" class="nav-btn active">
+                    <i class="fas fa-user-shield"></i>Admin
+                </a>
+            </div>
+        </div>
+        
+        <div class="content-grid">
+            <div class="user-list-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <i class="fas fa-users"></i> Users
+                    </h2>
+                    <button class="add-user-btn" onclick="showAddUserForm()">
+                        <i class="fas fa-plus"></i> Add User
+                    </button>
+                </div>
+                <input type="text" class="search-box" placeholder="Search users..." onkeyup="filterUsers(this.value)">
+                <div class="user-list" id="userList">
+                    <div style="text-align: center; padding: 20px; color: rgba(255,255,255,0.5);">
+                        <div class="loading-spinner"></div>
+                        <div style="margin-top: 10px;">Loading users...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-panel">
+                <div id="configContent">
+                    <div class="no-selection">
+                        <i class="fas fa-user-cog"></i>
+                        <h3>Select a user to configure</h3>
+                        <p style="margin-top: 10px;">Choose a user from the list to manage their teams, account type, and attributes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentUser = null;
+        let users = [];
+        let sigmaTeams = [];
+        let sigmaAccountTypes = [];
+        let sigmaUserAttributes = [];
+        let isNewUser = false;
+        
+        function createParticles() {
+            const bgAnimation = document.getElementById('bgAnimation');
+            const particleCount = 15;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.width = Math.random() * 6 + 3 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                bgAnimation.appendChild(particle);
+            }
+        }
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification ' + type + ' show';
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+        
+        async function loadSigmaData() {
+            try {
+                // Load teams
+                const teamsResponse = await fetch('/api/sigma/teams');
+                const teamsData = await teamsResponse.json();
+                sigmaTeams = teamsData.teams || [];
+                
+                // Load account types
+                const accountTypesResponse = await fetch('/api/sigma/account-types');
+                const accountTypesData = await accountTypesResponse.json();
+                sigmaAccountTypes = accountTypesData.accountTypes || [];
+                
+                // Load user attributes
+                const attributesResponse = await fetch('/api/sigma/user-attributes');
+                const attributesData = await attributesResponse.json();
+                sigmaUserAttributes = attributesData.attributes || [];
+                
+                console.log('Loaded Sigma data:', {
+                    teams: sigmaTeams.length,
+                    accountTypes: sigmaAccountTypes.length,
+                    attributes: sigmaUserAttributes.length
+                });
+            } catch (error) {
+                console.error('Error loading Sigma data:', error);
+                showNotification('Failed to load Sigma configuration data', 'error');
+            }
+        }
+        
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/admin/users');
+                const data = await response.json();
+                users = data.users || [];
+                renderUserList();
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showNotification('Failed to load users', 'error');
+            }
+        }
+        
+        function renderUserList() {
+            const userListEl = document.getElementById('userList');
+            
+            if (users.length === 0) {
+                userListEl.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: rgba(255,255,255,0.5);">
+                        <i class="fas fa-users" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <div>No users configured yet</div>
+                        <div style="font-size: 0.8rem; margin-top: 10px;">Click "Add User" to get started</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            userListEl.innerHTML = users.map(user => `
+                <div class="user-item ${currentUser?.email === user.email ? 'active' : ''}" 
+                     onclick="selectUser('${user.email}')" data-email="${user.email}">
+                    <div class="user-email">
+                        ${user.email}
+                        ${user.isInternal ? 
+                            '<span class="user-type-badge badge-internal">Internal</span>' : 
+                            '<span class="user-type-badge badge-external">External</span>'}
+                    </div>
+                    <div class="user-meta">
+                        <i class="fas fa-users"></i> ${user.teams ? user.teams.length : 0} teams
+                        · <i class="fas fa-tag"></i> ${user.accountType || 'Not set'}
+                        · <i class="fas fa-key"></i> ${user.userAttributes ? Object.keys(user.userAttributes).length : 0} attributes
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function filterUsers(searchTerm) {
+            const userItems = document.querySelectorAll('.user-item');
+            const term = searchTerm.toLowerCase();
+            
+            userItems.forEach(item => {
+                const email = item.dataset.email.toLowerCase();
+                if (email.includes(term)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        async function selectUser(email) {
+            const user = users.find(u => u.email === email);
+            if (!user) return;
+            
+            currentUser = user;
+            isNewUser = false;
+            renderUserList();
+            showUserConfig();
+        }
+        
+        function showAddUserForm() {
+            isNewUser = true;
+            currentUser = {
+                email: '',
+                isInternal: false,
+                teams: [],
+                accountType: '',
+                userAttributes: {}
+            };
+            showUserConfig();
+        }
+        
+        function showUserConfig() {
+            const configContent = document.getElementById('configContent');
+            
+            if (!currentUser) {
+                configContent.innerHTML = `
+                    <div class="no-selection">
+                        <i class="fas fa-user-cog"></i>
+                        <h3>Select a user to configure</h3>
+                        <p style="margin-top: 10px;">Choose a user from the list to manage their configuration</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            configContent.innerHTML = `
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <i class="fas fa-user-cog"></i> ${isNewUser ? 'Add New User' : 'Configure User'}
+                    </h2>
+                </div>
+                
+                <div class="form-section">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="userEmail" 
+                           value="${currentUser.email}" 
+                           ${!isNewUser ? 'readonly' : ''}
+                           placeholder="user@example.com">
+                </div>
+                
+                <div class="form-section">
+                    <label class="form-label">User Type</label>
+                    <select class="form-input" id="userType" onchange="toggleExternalFields()">
+                        <option value="external" ${!currentUser.isInternal ? 'selected' : ''}>External User</option>
+                        <option value="internal" ${currentUser.isInternal ? 'selected' : ''}>Internal User (Sigma Member)</option>
+                    </select>
+                    <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 5px;">
+                        Internal users use their Sigma account permissions. External users need configuration below.
+                    </small>
+                </div>
+                
+                <div id="externalUserFields" style="${currentUser.isInternal ? 'display: none;' : ''}">
+                    <div class="form-section">
+                        <label class="form-label">Teams (Multi-select)</label>
+                        <div class="multi-select" id="teamsSelect">
+                            ${sigmaTeams.length > 0 ? sigmaTeams.map(team => `
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="team_${team.id}" value="${team.name}"
+                                           ${currentUser.teams?.includes(team.name) ? 'checked' : ''}>
+                                    <label for="team_${team.id}">${team.name}</label>
+                                </div>
+                            `).join('') : '<div style="color: rgba(255,255,255,0.5); padding: 10px;">Loading teams...</div>'}
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <label class="form-label">Account Type</label>
+                        <select class="form-input" id="accountType">
+                            <option value="">Select account type...</option>
+                            ${sigmaAccountTypes.map(type => `
+                                <option value="${type.name}" ${currentUser.accountType === type.name ? 'selected' : ''}>
+                                    ${type.name}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="form-section">
+                        <label class="form-label">User Attributes</label>
+                        <div class="multi-select" id="attributesSelect">
+                            ${sigmaUserAttributes.length > 0 ? sigmaUserAttributes.map(attr => `
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="attr_${attr.id}" 
+                                           value="${attr.name}"
+                                           onchange="toggleAttributeValue('${attr.name}', this.checked)"
+                                           ${currentUser.userAttributes?.[attr.name] !== undefined ? 'checked' : ''}>
+                                    <label for="attr_${attr.id}">${attr.name}</label>
+                                </div>
+                                <div id="attrValue_${attr.name}" class="attribute-values" 
+                                     style="${currentUser.userAttributes?.[attr.name] !== undefined ? '' : 'display: none;'}">
+                                    <input type="text" class="attribute-value-input" 
+                                           placeholder="Enter value(s) for ${attr.name}"
+                                           value="${currentUser.userAttributes?.[attr.name] || ''}">
+                                </div>
+                            `).join('') : '<div style="color: rgba(255,255,255,0.5); padding: 10px;">Loading attributes...</div>'}
+                        </div>
+                        <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 10px;">
+                            For multiple values, separate with commas (e.g., value1, value2)
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-save" onclick="saveUser()">
+                        <i class="fas fa-save"></i> ${isNewUser ? 'Create User' : 'Save Changes'}
+                    </button>
+                    ${!isNewUser ? `
+                        <button class="btn btn-delete" onclick="deleteUser()">
+                            <i class="fas fa-trash"></i> Delete User
+                        </button>
+                    ` : ''}
+                    <button class="btn btn-cancel" onclick="cancelEdit()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            `;
+        }
+        
+        function toggleExternalFields() {
+            const userType = document.getElementById('userType').value;
+            const externalFields = document.getElementById('externalUserFields');
+            
+            if (userType === 'internal') {
+                externalFields.style.display = 'none';
+            } else {
+                externalFields.style.display = 'block';
+            }
+        }
+        
+        function toggleAttributeValue(attrName, checked) {
+            const valueDiv = document.getElementById(`attrValue_${attrName}`);
+            if (valueDiv) {
+                valueDiv.style.display = checked ? 'block' : 'none';
+            }
+        }
+        
+        async function saveUser() {
+            const email = document.getElementById('userEmail').value.trim();
+            if (!email) {
+                showNotification('Please enter an email address', 'error');
+                return;
+            }
+            
+            const userType = document.getElementById('userType').value;
+            const isInternal = userType === 'internal';
+            
+            let userData = {
+                email: email,
+                isInternal: isInternal
+            };
+            
+            if (!isInternal) {
+                // Get selected teams
+                const selectedTeams = [];
+                document.querySelectorAll('#teamsSelect input[type="checkbox"]:checked').forEach(checkbox => {
+                    selectedTeams.push(checkbox.value);
+                });
+                
+                // Get account type
+                const accountType = document.getElementById('accountType').value;
+                
+                // Get user attributes
+                const userAttributes = {};
+                sigmaUserAttributes.forEach(attr => {
+                    const checkbox = document.getElementById(`attr_${attr.id}`);
+                    if (checkbox && checkbox.checked) {
+                        const valueInput = document.querySelector(`#attrValue_${attr.name} input`);
+                        if (valueInput && valueInput.value) {
+                            userAttributes[attr.name] = valueInput.value;
+                        }
+                    }
+                });
+                
+                userData.teams = selectedTeams;
+                userData.accountType = accountType;
+                userData.userAttributes = userAttributes;
+            }
+            
+            try {
+                const method = isNewUser ? 'POST' : 'PUT';
+                const url = isNewUser ? '/api/admin/users' : `/api/admin/users/${encodeURIComponent(email)}`;
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(`User ${isNewUser ? 'created' : 'updated'} successfully`, 'success');
+                    await loadUsers();
+                    if (isNewUser) {
+                        selectUser(email);
+                    }
+                } else {
+                    showNotification(data.error || 'Failed to save user', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving user:', error);
+                showNotification('Failed to save user configuration', 'error');
+            }
+        }
+        
+        async function deleteUser() {
+            if (!currentUser) return;
+            
+            if (!confirm(`Are you sure you want to delete the configuration for ${currentUser.email}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/users/${encodeURIComponent(currentUser.email)}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('User configuration deleted successfully', 'success');
+                    currentUser = null;
+                    await loadUsers();
+                    showUserConfig();
+                } else {
+                    showNotification(data.error || 'Failed to delete user', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showNotification('Failed to delete user configuration', 'error');
+            }
+        }
+        
+        function cancelEdit() {
+            currentUser = null;
+            isNewUser = false;
+            renderUserList();
+            showUserConfig();
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            createParticles();
+            await loadSigmaData();
+            await loadUsers();
+        });
+    </script>
+</body>
+</html>

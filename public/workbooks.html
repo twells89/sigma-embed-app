@@ -611,7 +611,7 @@
         
         async function loadWorkbooks() {
             try {
-                console.log('📚 Fetching workbooks for:', currentUserEmail);
+                console.log('ðŸ“š Fetching workbooks for:', currentUserEmail);
                 
                 const response = await fetch(`/api/workbooks?email=${encodeURIComponent(currentUserEmail)}`);
                 
@@ -622,7 +622,7 @@
                 const data = await response.json();
                 allWorkbooks = data.workbooks || [];
                 
-                console.log('✅ Loaded', allWorkbooks.length, 'workbooks');
+                console.log('âœ… Loaded', allWorkbooks.length, 'workbooks');
                 
                 renderWorkbooks(allWorkbooks);
                 

@@ -59,7 +59,7 @@
             text-align: center;
             position: relative;
             flex-shrink: 0;
-            min-height: 160px;
+            min-height: 140px;
         }
         
         .header::before {
@@ -213,38 +213,6 @@
             gap: 15px;
             padding: 8px 20px 0px 20px;
             flex-wrap: wrap;
-        }
-        
-        .selector-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .selector-label {
-            font-size: 11px;
-            color: #00ffff;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            white-space: nowrap;
-        }
-        
-        .selector-dropdown {
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 128, 255, 0.1));
-            border: 1px solid rgba(0, 255, 255, 0.4);
-            color: #00ffff;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            backdrop-filter: blur(10px);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            outline: none;
-            min-width: 80px;
         }
         
         .action-btn {
@@ -528,6 +496,19 @@
             font-size: 0.8rem;
         }
         
+        .shared-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(155, 89, 182, 0.2);
+            border: 1px solid rgba(155, 89, 182, 0.4);
+            color: #9b59b6;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+        }
+        
         .bookmark-actions {
             display: flex;
             gap: 10px;
@@ -597,6 +578,80 @@
 <body>
     <div class="bg-animation" id="bgAnimation"></div>
     <div class="notification" id="notification"></div>
+    
+    <!-- Scheduler Modal -->
+    <div class="modal" id="schedulerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-clock"></i> Schedule Report
+                </h2>
+                <button class="close-btn" onclick="closeSchedulerModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Schedule Name</label>
+                <input type="text" id="scheduleName" class="form-input" placeholder="Daily Sales Report...">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Select Bookmark</label>
+                <select id="scheduleBookmark" class="form-input">
+                    <option value="">Select a bookmark...</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Frequency</label>
+                <select id="scheduleFrequency" class="form-input" onchange="updateCronExpression()">
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="custom">Custom Cron Expression</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="customCronGroup" style="display: none;">
+                <label class="form-label">Cron Expression</label>
+                <input type="text" id="customCron" class="form-input" placeholder="0 9 * * 1-5">
+                <small style="color: rgba(255,255,255,0.5);">Format: minute hour day month weekday</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Time</label>
+                <input type="time" id="scheduleTime" class="form-input" value="09:00" onchange="updateCronExpression()">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Format</label>
+                <select id="scheduleFormat" class="form-input">
+                    <option value="pdf">PDF</option>
+                    <option value="excel">Excel</option>
+                    <option value="csv">CSV</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Recipients (comma-separated emails)</label>
+                <input type="text" id="scheduleRecipients" class="form-input" placeholder="user@example.com, team@example.com">
+            </div>
+            
+            <button class="action-btn" onclick="createSchedule()" style="width: 100%; margin-bottom: 20px;">
+                <i class="fas fa-plus"></i> Create Schedule
+            </button>
+            
+            <div class="form-group">
+                <label class="form-label">My Schedules</label>
+                <div class="bookmarks-list" id="schedulesList">
+                    <div style="text-align: center; color: rgba(255,255,255,0.5); padding: 20px;">
+                        Loading schedules...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <!-- Bookmark Modal -->
     <div class="modal" id="bookmarkModal">
@@ -678,27 +733,19 @@
                 <a href="/ask" class="nav-btn">
                     <i class="fas fa-brain"></i>Ask Sigma
                 </a>
+                <a href="/admin" class="nav-btn">
+                    <i class="fas fa-user-shield"></i>Admin
+                </a>
             </div>
             <div class="controls">
-                <div class="selector-group">
-                    <label class="selector-label">Region:</label>
-                    <select class="selector-dropdown" id="regionSelect" onchange="onSelectionChange()">
-                        <option value="East">East</option>
-                        <option value="West">West</option>
-                    </select>
-                </div>
-                <div class="selector-group">
-                    <label class="selector-label">Environment:</label>
-                    <select class="selector-dropdown" id="environmentSelect" onchange="onSelectionChange()">
-                        <option value="Production">Production</option>
-                        <option value="Development">Development</option>
-                    </select>
-                </div>
                 <button class="action-btn" onclick="loadEmbed()">
                     <i class="fas fa-sync-alt"></i>Refresh
                 </button>
                 <button class="action-btn bookmark-btn" onclick="openBookmarkModal()">
                     <i class="fas fa-bookmark"></i>Bookmarks
+                </button>
+                <button class="action-btn" onclick="openSchedulerModal()" style="background: linear-gradient(45deg, #27ae60, #229954);">
+                    <i class="fas fa-clock"></i>Scheduler
                 </button>
             </div>
         </div>
@@ -713,7 +760,6 @@
     </div>
     
     <div class="status-bar"></div>
-
     <script>
         let currentUserEmail = '';
         let currentWorkbookId = '';
@@ -745,7 +791,6 @@
                 const urlId = workbookUrlId || localStorage.getItem('selectedWorkbookUrlId') || workbookId;
                 const name = workbookName || localStorage.getItem('selectedWorkbookName') || 'Selected Workbook';
                 
-                // Store for future use
                 localStorage.setItem('selectedWorkbookId', workbookId);
                 localStorage.setItem('selectedWorkbookUrlId', urlId);
                 localStorage.setItem('selectedWorkbookName', name);
@@ -757,7 +802,6 @@
                 };
             }
             
-            // Check localStorage for selected workbook
             const storedId = localStorage.getItem('selectedWorkbookId');
             const storedUrlId = localStorage.getItem('selectedWorkbookUrlId');
             const storedName = localStorage.getItem('selectedWorkbookName');
@@ -770,7 +814,6 @@
                 };
             }
             
-            // If no workbook selected, redirect to workbooks page
             window.location.href = '/workbooks';
             return null;
         }
@@ -816,7 +859,7 @@
                 const response = await fetch(`/api/user/teams?email=${encodeURIComponent(currentUserEmail)}`);
                 const data = await response.json();
                 userTeams = data.teams || [];
-                console.log('👥 User teams:', userTeams);
+                console.log('ðŸ‘¥ User teams:', userTeams);
                 return userTeams;
             } catch (error) {
                 console.error('Error fetching user teams:', error);
@@ -868,55 +911,7 @@
             document.querySelector('input[name="shareType"][value="private"]').checked = true;
             updateTeamSelector();
         }
-        
-        async function loadBookmarks() {
-            try {
-                const response = await fetch(`/api/bookmarks?email=${encodeURIComponent(currentUserEmail)}&workbookId=${currentWorkbookId}`);
-                const data = await response.json();
-                
-                const bookmarksList = document.getElementById('bookmarksList');
-                
-                if (data.bookmarks && data.bookmarks.length > 0) {
-                    bookmarksList.innerHTML = data.bookmarks.map(bookmark => `
-                        <div class="bookmark-item">
-                            <div class="bookmark-info">
-                                <div class="bookmark-name">
-                        <i class="fas fa-bookmark"></i> ${bookmark.name}
-                                </div>
-                                <div class="bookmark-meta">
-                                    ${bookmark.share_type === 'team' ? 
-                                        '<i class="fas fa-users"></i> Shared with ' + bookmark.team + ' team' : 
-                                        '<i class="fas fa-lock"></i> Private'}
-                                    ${bookmark.user_email !== currentUserEmail ? 
-                                        ' • Created by ' + bookmark.user_email : ''}
-                                </div>
-                            </div>
-                            <div class="bookmark-actions">
-                                <button class="icon-btn" onclick="loadBookmark('${bookmark.bookmark_id}')" title="Load this bookmark">
-                                    <i class="fas fa-external-link-alt"></i>
-                                </button>
-                                ${bookmark.user_email === currentUserEmail ? `
-                                    <button class="icon-btn delete" onclick="deleteBookmark('${bookmark.bookmark_id}')" title="Delete bookmark">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                ` : ''}
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    bookmarksList.innerHTML = `
-                        <div style="text-align: center; color: rgba(255,255,255,0.5); padding: 20px;">
-                            <i class="fas fa-bookmark" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                            <div>No bookmarks yet. Create one to save your current view!</div>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error loading bookmarks:', error);
-                showNotification('Failed to load bookmarks', 'error');
-            }
-        }
-        
+
         async function createBookmark() {
             const bookmarkName = document.getElementById('bookmarkName').value.trim();
             const shareType = document.querySelector('input[name="shareType"]:checked').value;
@@ -942,6 +937,7 @@
             
             try {
                 console.log('Creating bookmark with explore key:', currentExploreKey);
+                showNotification('âœ… Creating bookmark...', 'success');
                 
                 const response = await fetch('/api/bookmarks', {
                     method: 'POST',
@@ -962,26 +958,144 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    showNotification('Bookmark created successfully!', 'success');
+                    if (data.bookmark.isNew) {
+                        showNotification('New bookmark created in Sigma!', 'success');
+                    } else {
+                        showNotification('Bookmark already exists - granted access!', 'success');
+                    }
+                    
                     document.getElementById('bookmarkName').value = '';
                     document.querySelector('input[name="shareType"][value="private"]').checked = true;
                     updateTeamSelector();
+                    
                     loadBookmarks();
                 } else {
-                    showNotification('Failed to create bookmark: ' + (data.error || 'Unknown error'), 'error');
+                    if (data.details) {
+                        showNotification(data.error + ' - ' + data.details, 'error');
+                    } else {
+                        showNotification(data.error || 'Failed to create bookmark', 'error');
+                    }
                 }
             } catch (error) {
                 console.error('Error creating bookmark:', error);
                 showNotification('Failed to create bookmark: ' + error.message, 'error');
             }
         }
-        
+
+        async function loadBookmarks() {
+            try {
+                const url = `/api/bookmarks?email=${encodeURIComponent(currentUserEmail)}&workbookId=${currentWorkbookId}`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                const bookmarksList = document.getElementById('bookmarksList');
+                
+                if (data.bookmarks && data.bookmarks.length > 0) {
+                    const bookmarkHTML = data.bookmarks.map(bookmark => {
+                        const isOwner = bookmark.is_owner === 1;
+                        const hasTeamShares = bookmark.shared_teams && bookmark.shared_teams.length > 0;
+                        
+                        let shareInfo = '';
+                        if (hasTeamShares) {
+                            const teams = bookmark.shared_teams.map(s => s.team_name).join(', ');
+                            shareInfo = `<span class="shared-badge"><i class="fas fa-users"></i> Shared with: ${teams}</span>`;
+                        }
+                        
+                        return `
+                        <div class="bookmark-item">
+                            <div class="bookmark-info">
+                                <div class="bookmark-name">
+                                    <i class="fas fa-bookmark"></i> ${bookmark.custom_name || bookmark.name}
+                                    ${shareInfo}
+                                </div>
+                                <div class="bookmark-meta">
+                                    <i class="fas fa-user"></i> Created by: ${bookmark.created_by}
+                                    ${bookmark.explore_key ? 
+                                        ' â€¢ <i class="fas fa-chart-bar"></i> Specific view' : 
+                                        ' â€¢ <i class="fas fa-book"></i> Workbook level'}
+                                    ${isOwner ? 
+                                        ' â€¢ <span style="color: #00ffff;"><i class="fas fa-crown"></i> Owner</span>' : 
+                                        ' â€¢ <span style="color: #9b59b6;"><i class="fas fa-eye"></i> Viewer</span>'}
+                                </div>
+                            </div>
+                            <div class="bookmark-actions">
+                                <button class="icon-btn" onclick="loadBookmark('${bookmark.bookmark_id}')" title="Load this bookmark">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                                ${isOwner ? `
+                                    <button class="icon-btn delete" onclick="deleteBookmark('${bookmark.bookmark_id}')" title="Delete bookmark completely">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                ` : `
+                                    <button class="icon-btn delete" onclick="removeAccess('${bookmark.bookmark_id}')" title="Remove your access">
+                                        <i class="fas fa-user-minus"></i>
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    `;
+                    });
+                    
+                    bookmarksList.innerHTML = bookmarkHTML.join('');
+                } else {
+                    bookmarksList.innerHTML = `
+                        <div style="text-align: center; color: rgba(255,255,255,0.5); padding: 20px;">
+                            <i class="fas fa-bookmark" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <div>No bookmarks yet. Create one to save your current view!</div>
+                            <div style="font-size: 0.8rem; margin-top: 10px; opacity: 0.7;">
+                                Bookmarks are shared resources - one bookmark can be accessed by multiple users
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading bookmarks:', error);
+                showNotification('Failed to load bookmarks', 'error');
+            }
+        }
+
+        async function loadBookmark(bookmarkId) {
+            try {
+                showNotification('Loading bookmark...', 'success');
+                
+                const response = await fetch(`/api/bookmarks/load/${bookmarkId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userEmail: currentUserEmail,
+                        workbookId: currentWorkbookId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    showNotification(data.error || 'Failed to load bookmark', 'error');
+                    return;
+                }
+                
+                currentBookmarkId = bookmarkId;
+                closeBookmarkModal();
+                loadEmbed(bookmarkId);
+                showNotification('Bookmark loaded successfully', 'success');
+                
+            } catch (error) {
+                console.error('Error loading bookmark:', error);
+                showNotification('Failed to load bookmark', 'error');
+            }
+        }
+
         async function deleteBookmark(bookmarkId) {
-            if (!confirm('Are you sure you want to delete this bookmark?')) {
+            if (!confirm('Are you sure you want to delete this bookmark? This will remove it completely from Sigma and all users will lose access.')) {
                 return;
             }
             
             try {
+                showNotification('Deleting bookmark...', 'success');
+                
                 const response = await fetch(`/api/bookmarks/${bookmarkId}?userEmail=${encodeURIComponent(currentUserEmail)}&workbookId=${currentWorkbookId}`, {
                     method: 'DELETE'
                 });
@@ -989,7 +1103,11 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    showNotification('Bookmark deleted successfully', 'success');
+                    if (data.action === 'deleted') {
+                        showNotification('Bookmark deleted completely from Sigma', 'success');
+                    } else {
+                        showNotification('Your access has been removed', 'success');
+                    }
                     loadBookmarks();
                     
                     if (currentBookmarkId === bookmarkId) {
@@ -997,66 +1115,343 @@
                         loadEmbed();
                     }
                 } else {
-                    showNotification('Failed to delete bookmark', 'error');
+                    showNotification('Failed to delete bookmark: ' + (data.error || 'Unknown error'), 'error');
                 }
             } catch (error) {
                 console.error('Error deleting bookmark:', error);
                 showNotification('Failed to delete bookmark', 'error');
             }
         }
-        
-        function loadBookmark(bookmarkId) {
-            currentBookmarkId = bookmarkId;
-            closeBookmarkModal();
-            loadEmbed(null, null, bookmarkId);
-            showNotification('Loading bookmark...', 'success');
+
+        async function removeAccess(bookmarkId) {
+            if (!confirm('Are you sure you want to remove your access to this bookmark?')) {
+                return;
+            }
+            
+            try {
+                showNotification('Removing access...', 'success');
+                
+                const response = await fetch(`/api/bookmarks/${bookmarkId}?userEmail=${encodeURIComponent(currentUserEmail)}&workbookId=${currentWorkbookId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Your access has been removed', 'success');
+                    loadBookmarks();
+                    
+                    if (currentBookmarkId === bookmarkId) {
+                        currentBookmarkId = null;
+                        loadEmbed();
+                    }
+                } else {
+                    showNotification('Failed to remove access: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error removing access:', error);
+                showNotification('Failed to remove access', 'error');
+            }
         }
         
+        // Scheduler Functions
+        async function openSchedulerModal() {
+            document.getElementById('schedulerModal').classList.add('show');
+            await loadBookmarksForScheduler();
+            loadSchedules();
+        }
+        
+        function closeSchedulerModal() {
+            document.getElementById('schedulerModal').classList.remove('show');
+            document.getElementById('scheduleName').value = '';
+            document.getElementById('scheduleBookmark').value = '';
+            document.getElementById('scheduleRecipients').value = '';
+        }
+        
+        async function loadBookmarksForScheduler() {
+            try {
+                const response = await fetch(`/api/bookmarks?email=${encodeURIComponent(currentUserEmail)}&workbookId=${currentWorkbookId}`);
+                const data = await response.json();
+                
+                const bookmarkSelect = document.getElementById('scheduleBookmark');
+                bookmarkSelect.innerHTML = '<option value="">Select a bookmark...</option>';
+                
+                if (data.bookmarks && data.bookmarks.length > 0) {
+                    data.bookmarks.forEach(bookmark => {
+                        const option = document.createElement('option');
+                        option.value = bookmark.bookmark_id;
+                        option.textContent = bookmark.name || bookmark.custom_name;
+                        bookmarkSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading bookmarks for scheduler:', error);
+            }
+        }
+        
+        function updateCronExpression() {
+            const frequency = document.getElementById('scheduleFrequency').value;
+            const customCronGroup = document.getElementById('customCronGroup');
+            
+            if (frequency === 'custom') {
+                customCronGroup.style.display = 'block';
+            } else {
+                customCronGroup.style.display = 'none';
+                
+                const time = document.getElementById('scheduleTime').value;
+                const [hour, minute] = time.split(':');
+                let cronExpression = '';
+                
+                switch (frequency) {
+                    case 'daily':
+                        cronExpression = `${minute} ${hour} * * *`;
+                        break;
+                    case 'weekly':
+                        cronExpression = `${minute} ${hour} * * 1`; // Every Monday
+                        break;
+                    case 'monthly':
+                        cronExpression = `${minute} ${hour} 1 * *`; // First day of month
+                        break;
+                }
+                
+                document.getElementById('customCron').value = cronExpression;
+            }
+        }
+        
+        async function createSchedule() {
+            const scheduleName = document.getElementById('scheduleName').value.trim();
+            const bookmarkId = document.getElementById('scheduleBookmark').value;
+            const frequency = document.getElementById('scheduleFrequency').value;
+            const format = document.getElementById('scheduleFormat').value;
+            const recipients = document.getElementById('scheduleRecipients').value.trim();
+            
+            if (!scheduleName || !bookmarkId || !recipients) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            let cronExpression = document.getElementById('customCron').value;
+            if (!cronExpression) {
+                updateCronExpression();
+                cronExpression = document.getElementById('customCron').value;
+            }
+            
+            // Parse recipients into array
+            const recipientList = recipients.split(',').map(email => email.trim()).filter(email => email);
+            
+            if (recipientList.length === 0) {
+                showNotification('Please enter at least one recipient email', 'error');
+                return;
+            }
+            
+            try {
+                showNotification('Creating schedule...', 'success');
+                
+                const response = await fetch(`/api/bookmarks/${bookmarkId}/schedule`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        scheduleName: scheduleName,
+                        cronExpression: cronExpression,
+                        destinationType: 'email',
+                        destinationConfig: {
+                            recipients: recipientList
+                        },
+                        format: format,
+                        createdBy: currentUserEmail
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Schedule created successfully!', 'success');
+                    document.getElementById('scheduleName').value = '';
+                    document.getElementById('scheduleBookmark').value = '';
+                    document.getElementById('scheduleRecipients').value = '';
+                    loadSchedules();
+                } else {
+                    showNotification('Failed to create schedule: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error creating schedule:', error);
+                showNotification('Failed to create schedule: ' + error.message, 'error');
+            }
+        }
+        
+        async function loadSchedules() {
+            try {
+                const response = await fetch(`/api/scheduled-reports?email=${encodeURIComponent(currentUserEmail)}`);
+                const data = await response.json();
+                
+                const schedulesList = document.getElementById('schedulesList');
+                
+                if (data.schedules && data.schedules.length > 0) {
+                    const schedulesHTML = data.schedules.map(schedule => {
+                        const recipients = schedule.destination_config.recipients || [];
+                        const isActive = schedule.is_active === 1;
+                        
+                        return `
+                        <div class="bookmark-item">
+                            <div class="bookmark-info">
+                                <div class="bookmark-name">
+                                    <i class="fas fa-clock"></i> ${schedule.schedule_name}
+                                    ${isActive ? 
+                                        '<span style="color: #27ae60; margin-left: 10px;"><i class="fas fa-check-circle"></i> Active</span>' : 
+                                        '<span style="color: #e74c3c; margin-left: 10px;"><i class="fas fa-pause-circle"></i> Paused</span>'}
+                                </div>
+                                <div class="bookmark-meta">
+                                    <i class="fas fa-bookmark"></i> ${schedule.bookmark_name}
+                                    â€¢ <i class="fas fa-calendar"></i> ${schedule.cron_expression}
+                                    â€¢ <i class="fas fa-file"></i> ${schedule.format.toUpperCase()}
+                                    <br>
+                                    <i class="fas fa-envelope"></i> ${recipients.join(', ')}
+                                </div>
+                            </div>
+                            <div class="bookmark-actions">
+                                <button class="icon-btn" onclick="toggleSchedule('${schedule.schedule_id}', ${!isActive})" title="${isActive ? 'Pause' : 'Resume'} schedule">
+                                    <i class="fas ${isActive ? 'fa-pause' : 'fa-play'}"></i>
+                                </button>
+                                <button class="icon-btn delete" onclick="deleteSchedule('${schedule.schedule_id}')" title="Delete schedule">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    });
+                    
+                    schedulesList.innerHTML = schedulesHTML.join('');
+                } else {
+                    schedulesList.innerHTML = `
+                        <div style="text-align: center; color: rgba(255,255,255,0.5); padding: 20px;">
+                            <i class="fas fa-clock" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <div>No schedules yet. Create one to automate report delivery!</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading schedules:', error);
+                showNotification('Failed to load schedules', 'error');
+            }
+        }
+        
+        async function toggleSchedule(scheduleId, activate) {
+            try {
+                showNotification(activate ? 'Resuming schedule...' : 'Pausing schedule...', 'success');
+                
+                const response = await fetch(`/api/scheduled-reports/${scheduleId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userEmail: currentUserEmail,
+                        isActive: activate
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(activate ? 'Schedule resumed' : 'Schedule paused', 'success');
+                    loadSchedules();
+                } else {
+                    showNotification('Failed to update schedule', 'error');
+                }
+            } catch (error) {
+                console.error('Error toggling schedule:', error);
+                showNotification('Failed to update schedule', 'error');
+            }
+        }
+        
+        async function deleteSchedule(scheduleId) {
+            if (!confirm('Are you sure you want to delete this schedule?')) {
+                return;
+            }
+            
+            try {
+                showNotification('Deleting schedule...', 'success');
+                
+                const response = await fetch(`/api/scheduled-reports/${scheduleId}?userEmail=${encodeURIComponent(currentUserEmail)}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Schedule deleted successfully', 'success');
+                    loadSchedules();
+                } else {
+                    showNotification('Failed to delete schedule: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting schedule:', error);
+                showNotification('Failed to delete schedule', 'error');
+            }
+        }
+        
+        function sendUserEmailToPlugin() {
+            const iframe = document.getElementById('sigma-embed');
+            if (iframe && iframe.contentWindow && currentUserEmail) {
+                console.log('Setting Sigma control with user email:', currentUserEmail);
+                
+                iframe.contentWindow.postMessage({
+                    type: 'workbook:variables:update',
+                    variables: {
+                        CurrentUserEmail: currentUserEmail
+                    }
+                }, 'https://app.sigmacomputing.com');
+                
+                console.log('Sigma control updated with user email');
+            }
+        }
+
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type) {
-                console.log('📨 Embed event:', event.data.type, event.data);
+                console.log('Embed event:', event.data.type, event.data);
             }
             
             if (event.data && event.data.type) {
                 switch (event.data.type) {
                     case 'workbook:loaded':
-                        console.log('✅ Workbook loaded successfully');
+                        console.log('âœ… Workbook loaded successfully');
                         embedLoaded = true;
-                        showNotification('Dashboard loaded successfully!', 'success');
+                        showNotification('âœ… Dashboard loaded successfully!', 'success');
+                        
+                        setTimeout(() => sendUserEmailToPlugin(), 1000);
+                        setTimeout(() => sendUserEmailToPlugin(), 2000);
                         break;
                         
                     case 'workbook:exploreKey:onchange':
-                        console.log('🔑 Explore key changed event:', event.data);
+                        console.log('ðŸ”‘ Explore key changed event:', event.data);
                         if (event.data.exploreKey !== undefined) {
                             currentExploreKey = event.data.exploreKey;
-                            console.log('✅ Updated explore key to:', currentExploreKey);
+                            console.log('âœ… Updated explore key to:', currentExploreKey);
                         }
                         break;
                         
                     case 'workbook:pageload':
-                        console.log('📄 Page loaded event:', event.data);
+                        console.log('ðŸ“„ Page loaded event:', event.data);
                         if (event.data.exploreKey !== undefined) {
                             currentExploreKey = event.data.exploreKey;
-                            console.log('🔑 Updated explore key to:', currentExploreKey);
+                            console.log('ðŸ”‘ Updated explore key to:', currentExploreKey);
                         }
                         break;
                         
                     case 'workbook:error':
-                        console.error('❌ Workbook error:', event.data);
+                        console.error('âš ï¸ Workbook error:', event.data);
                         showNotification('Error loading dashboard: ' + (event.data.message || 'Unknown error'), 'error');
                         break;
                 }
             }
         });
         
-        function loadEmbed(region, environment, bookmarkId) {
+        function loadEmbed(bookmarkId) {
             const loading = document.getElementById('loading');
             const iframe = document.getElementById('sigma-embed');
-            const regionSelect = document.getElementById('regionSelect');
-            const environmentSelect = document.getElementById('environmentSelect');
             
-            const selectedRegion = region || regionSelect.value || 'East';
-            const selectedEnvironment = environment || environmentSelect.value || 'Production';
             const selectedBookmarkId = bookmarkId || currentBookmarkId || null;
             
             embedLoaded = false;
@@ -1064,8 +1459,8 @@
             loading.style.display = 'flex';
             iframe.style.display = 'none';
             
-            // Use currentWorkbookUrlId for the signed URL API
-            let url = `/api/signed-url?workbookId=${currentWorkbookId}&workbookUrlId=${encodeURIComponent(currentWorkbookUrlId)}&region=${selectedRegion}&environment=${selectedEnvironment}&email=${encodeURIComponent(currentUserEmail)}`;
+            // NO region or environment parameters anymore!
+            let url = `/api/signed-url?workbookId=${currentWorkbookId}&workbookUrlId=${encodeURIComponent(currentWorkbookUrlId)}&email=${encodeURIComponent(currentUserEmail)}`;
             if (selectedBookmarkId) {
                 url += `&bookmarkId=${selectedBookmarkId}`;
             }
@@ -1104,20 +1499,6 @@
                     loading.style.display = 'none';
                     showNotification('Failed to load dashboard', 'error');
                 });
-        }
-        
-        function onSelectionChange() {
-            const regionSelect = document.getElementById('regionSelect');
-            const environmentSelect = document.getElementById('environmentSelect');
-            const selectedRegion = regionSelect.value;
-            const selectedEnvironment = environmentSelect.value;
-            
-            currentBookmarkId = null;
-            
-            console.log('Selection changed - Region: ' + selectedRegion + ', Environment: ' + selectedEnvironment);
-            showNotification('Switching to ' + selectedRegion + ' - ' + selectedEnvironment + '...', 'success');
-            
-            loadEmbed(selectedRegion, selectedEnvironment);
         }
         
         document.addEventListener('DOMContentLoaded', function() {
