@@ -183,12 +183,12 @@ const SIGMA_TEAMS_URL = `${SIGMA_BASE_URL}/teams`;
 const SIGMA_ACCOUNT_TYPES_URL = `${SIGMA_BASE_URL}/account-types`;
 const SIGMA_USER_ATTRIBUTES_URL = `${SIGMA_BASE_URL}/user-attributes`;
 
-const embedClientId = '47e18ee2f96c25f397d9e133c099ace93a92caeaa43c75d477eeadda562987f1';
-const embedSecret = 'ea7abbfe9300c2b1ae3cd1a3707dec406a21380e3a87e46bc2c1fd8b6a6c039a433e45a59ac385355396feede27fb2a93686c7ace00940133dd6dec656dba857';
+const embedClientId = 'ClientId';
+const embedSecret = 'Secret';
 const sigmaOrg = 'tj-wells-1989';
 
-const clientId = '7db69272bcbaf88c2a9eaed83ff2f54c212b9acb391e0792eac2e4c676242781';
-const clientSecret = '3bbdc1149cb4774ca8197a7cdcf0196ef4ecaa65b88b7a7f3946521af7e356c0f8bcf35eeb799fd564b475864dca4f966715215df99fa1943422a1251f74e20f';
+const clientId = 'ClientId';
+const clientSecret = 'Secret';
 
 // Feature flags
 const FEATURES = {
