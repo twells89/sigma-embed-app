@@ -22,15 +22,15 @@
         }
 
         /* ---------- Header ---------- */
-        .container { position: relative; z-index: 10; padding: 20px; }
+        .container { position: relative; z-index: 10; padding: 10px 20px; }
         .header {
           background: linear-gradient(135deg, rgba(0,255,255,0.06), rgba(0,128,255,0.04));
           backdrop-filter: blur(14px);
           border: 1px solid rgba(0,255,255,0.08);
           border-radius: 14px;
-          padding: 26px;
+          padding: 20px 26px;
           text-align: center;
-          margin-bottom: 20px;
+          margin-bottom: 15px;
         }
         .logo { display:flex; gap:12px; align-items:center; justify-content:center; margin-bottom:6px; }
         .logo i { font-size:2rem; background:linear-gradient(45deg,#ff6b35,#f7931e); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
@@ -142,6 +142,27 @@
           :root { --panel-max-height: none; }
           .user-list-panel, .config-panel { max-height: none; min-height: auto; }
         }
+
+        /* ---------- Add User Button ---------- */
+        .add-user-btn {
+            background-color: #007bff; /* Bootstrap primary color */
+            color: white; /* Text color */
+            border: none; /* Remove border */
+            border-radius: 5px; /* Rounded corners */
+            padding: 10px 15px; /* Padding for better size */
+            font-size: 16px; /* Font size */
+            cursor: pointer; /* Pointer cursor on hover */
+            transition: background-color 0.3s ease; /* Smooth transition */
+        }
+
+        .add-user-btn:hover {
+            background-color: #0056b3; /* Darker shade on hover */
+        }
+
+        .add-user-btn:focus {
+            outline: none; /* Remove outline on focus */
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Add shadow on focus */
+        }
     </style>
 </head>
 <body>
@@ -165,6 +186,9 @@
                 <a href="/admin" class="nav-btn active">
                     <i class="fas fa-user-shield"></i>Admin
                 </a>
+                <a href="/files" class="nav-btn">
+                    <i class="fas fa-folder"></i>File Manager
+                </a>
             </div>
         </div>
         
@@ -174,7 +198,7 @@
                     <h2 class="panel-title">
                         <i class="fas fa-users"></i> Users
                     </h2>
-                    <button class="add-user-btn" onclick="showAddUserForm()">
+                    <button class="btn btn-save" onclick="showAddUserForm()">
                         <i class="fas fa-plus"></i> Add User
                     </button>
                 </div>

@@ -372,7 +372,7 @@
             border-radius: 20px;
             padding: 30px;
             width: 90%;
-            max-width: 600px;
+            max-width: 700px;
             max-height: 80vh;
             overflow-y: auto;
             position: relative;
@@ -461,18 +461,42 @@
         
         .bookmarks-list {
             margin-top: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        /* Custom Scrollbar */
+        .bookmarks-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .bookmarks-list::-webkit-scrollbar-track {
+            background: rgba(0, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .bookmarks-list::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        
+        .bookmarks-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 255, 0.5);
         }
         
         .bookmark-item {
             background: linear-gradient(135deg, rgba(0, 255, 255, 0.05), rgba(0, 128, 255, 0.05));
             border: 1px solid rgba(0, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 10px;
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 20px;
             transition: all 0.3s ease;
+            min-height: 70px;
         }
         
         .bookmark-item:hover {
@@ -482,47 +506,61 @@
         
         .bookmark-info {
             flex: 1;
+            min-width: 0;
         }
         
         .bookmark-name {
             color: #00ffff;
             font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 5px;
+            font-size: 1.05rem;
+            margin-bottom: 6px;
+            line-height: 1.4;
         }
         
         .bookmark-meta {
             color: rgba(255, 255, 255, 0.7);
-            font-size: 0.8rem;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
         }
         
         .shared-badge {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
             background: rgba(155, 89, 182, 0.2);
             border: 1px solid rgba(155, 89, 182, 0.4);
             color: #9b59b6;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.7rem;
-            margin-left: 8px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
         }
         
         .bookmark-actions {
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            flex-shrink: 0;
         }
         
         .icon-btn {
             background: none;
             border: 1px solid rgba(0, 255, 255, 0.3);
             color: #00ffff;
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 10px 14px;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .icon-btn:hover {
@@ -560,17 +598,25 @@
             .modal-content {
                 padding: 20px;
                 width: 95%;
+                max-width: 100%;
             }
             
             .bookmark-item {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 10px;
+                gap: 14px;
+                padding: 16px;
             }
             
             .bookmark-actions {
                 width: 100%;
                 justify-content: flex-end;
+            }
+            
+            .icon-btn {
+                padding: 8px 12px;
+                min-width: 40px;
+                min-height: 40px;
             }
         }
     </style>
@@ -634,8 +680,22 @@
             </div>
             
             <div class="form-group">
+                <label class="form-label">Destination Type</label>
+                <select id="destinationType" class="form-input" onchange="updateDestinationFields()">
+                    <option value="email">Email</option>
+                    <option value="googleDrive">Google Drive Folder</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="emailRecipientsGroup">
                 <label class="form-label">Recipients (comma-separated emails)</label>
                 <input type="text" id="scheduleRecipients" class="form-input" placeholder="user@example.com, team@example.com">
+            </div>
+            
+            <div class="form-group" id="googleDriveGroup" style="display: none;">
+                <label class="form-label">Google Drive Folder URL</label>
+                <input type="text" id="googleDriveUrl" class="form-input" placeholder="https://drive.google.com/drive/folders/...">
+                <small style="color: rgba(255,255,255,0.5);">Paste the full URL of your Google Drive folder</small>
             </div>
             
             <button class="action-btn" onclick="createSchedule()" style="width: 100%; margin-bottom: 20px;">
@@ -696,7 +756,12 @@
             </button>
             
             <div class="form-group">
-                <label class="form-label">My Bookmarks</label>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <label class="form-label" style="margin-bottom: 0;">My Bookmarks</label>
+                    <button class="icon-btn" onclick="syncBookmarks()" title="Sync bookmarks from Sigma" style="background: linear-gradient(45deg, #3498db, #2980b9); padding: 8px 12px;">
+                        <i class="fas fa-sync-alt"></i> Sync
+                    </button>
+                </div>
                 <div class="bookmarks-list" id="bookmarksList">
                     <div style="text-align: center; color: rgba(255,255,255,0.5); padding: 20px;">
                         Loading bookmarks...
@@ -747,6 +812,9 @@
                 <button class="action-btn" onclick="openSchedulerModal()" style="background: linear-gradient(45deg, #27ae60, #229954);">
                     <i class="fas fa-clock"></i>Scheduler
                 </button>
+                <a href="/file-management.html" class="nav-btn">
+                    <i class="fas fa-folder"></i> File Management
+                </a>
             </div>
         </div>
         
@@ -765,6 +833,7 @@
         let currentWorkbookId = '';
         let currentWorkbookUrlId = '';
         let currentWorkbookName = '';
+        let currentItemType = 'workbook'; // New: track whether it's a workbook or data-model
         let embedLoaded = false;
         let currentBookmarkId = null;
         let currentExploreKey = '';
@@ -783,34 +852,57 @@
         
         function getWorkbookFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
-            const workbookId = urlParams.get('workbookId');
-            const workbookUrlId = urlParams.get('workbookUrlId');
-            const workbookName = urlParams.get('workbookName');
             
-            if (workbookId) {
-                const urlId = workbookUrlId || localStorage.getItem('selectedWorkbookUrlId') || workbookId;
-                const name = workbookName || localStorage.getItem('selectedWorkbookName') || 'Selected Workbook';
+            // Determine item type
+            const itemType = urlParams.get('itemType') || 
+                           (urlParams.get('dataModelId') ? 'data-model' : 'workbook');
+            
+            // Get the appropriate IDs based on item type
+            const itemId = urlParams.get('dataModelId') || urlParams.get('workbookId');
+            const itemUrlId = urlParams.get('dataModelUrlId') || urlParams.get('workbookUrlId');
+            const itemName = urlParams.get('itemName') || urlParams.get('dataModelName') || urlParams.get('workbookName');
+            
+            if (itemId) {
+                const urlId = itemUrlId || 
+                            localStorage.getItem(itemType === 'data-model' ? 'selectedDataModelUrlId' : 'selectedWorkbookUrlId') || 
+                            itemId;
+                const name = itemName || 
+                           localStorage.getItem(itemType === 'data-model' ? 'selectedDataModelName' : 'selectedWorkbookName') || 
+                           `Selected ${itemType === 'data-model' ? 'Data Model' : 'Workbook'}`;
                 
-                localStorage.setItem('selectedWorkbookId', workbookId);
-                localStorage.setItem('selectedWorkbookUrlId', urlId);
-                localStorage.setItem('selectedWorkbookName', name);
+                // Store based on item type
+                if (itemType === 'data-model') {
+                    localStorage.setItem('selectedDataModelId', itemId);
+                    localStorage.setItem('selectedDataModelUrlId', urlId);
+                    localStorage.setItem('selectedDataModelName', name);
+                    localStorage.setItem('selectedItemType', 'data-model');
+                } else {
+                    localStorage.setItem('selectedWorkbookId', itemId);
+                    localStorage.setItem('selectedWorkbookUrlId', urlId);
+                    localStorage.setItem('selectedWorkbookName', name);
+                    localStorage.setItem('selectedItemType', 'workbook');
+                }
                 
                 return {
-                    id: workbookId,
+                    id: itemId,
                     urlId: urlId,
-                    name: name
+                    name: name,
+                    type: itemType
                 };
             }
             
-            const storedId = localStorage.getItem('selectedWorkbookId');
-            const storedUrlId = localStorage.getItem('selectedWorkbookUrlId');
-            const storedName = localStorage.getItem('selectedWorkbookName');
+            // Check localStorage for stored item
+            const storedItemType = localStorage.getItem('selectedItemType') || 'workbook';
+            const storedId = localStorage.getItem(storedItemType === 'data-model' ? 'selectedDataModelId' : 'selectedWorkbookId');
+            const storedUrlId = localStorage.getItem(storedItemType === 'data-model' ? 'selectedDataModelUrlId' : 'selectedWorkbookUrlId');
+            const storedName = localStorage.getItem(storedItemType === 'data-model' ? 'selectedDataModelName' : 'selectedWorkbookName');
             
             if (storedId) {
                 return { 
                     id: storedId, 
                     urlId: storedUrlId || storedId,
-                    name: storedName || 'Selected Workbook' 
+                    name: storedName || `Selected ${storedItemType === 'data-model' ? 'Data Model' : 'Workbook'}`,
+                    type: storedItemType
                 };
             }
             
@@ -819,9 +911,15 @@
         }
 
         function logout() {
+            // Clear all stored items
             localStorage.removeItem('userEmail');
             localStorage.removeItem('selectedWorkbookId');
+            localStorage.removeItem('selectedWorkbookUrlId');
             localStorage.removeItem('selectedWorkbookName');
+            localStorage.removeItem('selectedDataModelId');
+            localStorage.removeItem('selectedDataModelUrlId');
+            localStorage.removeItem('selectedDataModelName');
+            localStorage.removeItem('selectedItemType');
             showNotification('Logged out successfully', 'success');
             setTimeout(() => {
                 window.location.href = '/login';
@@ -859,7 +957,7 @@
                 const response = await fetch(`/api/user/teams?email=${encodeURIComponent(currentUserEmail)}`);
                 const data = await response.json();
                 userTeams = data.teams || [];
-                console.log('ðŸ‘¥ User teams:', userTeams);
+                console.log('👥 User teams:', userTeams);
                 return userTeams;
             } catch (error) {
                 console.error('Error fetching user teams:', error);
@@ -937,7 +1035,7 @@
             
             try {
                 console.log('Creating bookmark with explore key:', currentExploreKey);
-                showNotification('âœ… Creating bookmark...', 'success');
+                showNotification('✅ Creating bookmark...', 'success');
                 
                 const response = await fetch('/api/bookmarks', {
                     method: 'POST',
@@ -1012,11 +1110,11 @@
                                 <div class="bookmark-meta">
                                     <i class="fas fa-user"></i> Created by: ${bookmark.created_by}
                                     ${bookmark.explore_key ? 
-                                        ' â€¢ <i class="fas fa-chart-bar"></i> Specific view' : 
-                                        ' â€¢ <i class="fas fa-book"></i> Workbook level'}
+                                        ' • <i class="fas fa-chart-bar"></i> Specific view' : 
+                                        ' • <i class="fas fa-book"></i> Workbook level'}
                                     ${isOwner ? 
-                                        ' â€¢ <span style="color: #00ffff;"><i class="fas fa-crown"></i> Owner</span>' : 
-                                        ' â€¢ <span style="color: #9b59b6;"><i class="fas fa-eye"></i> Viewer</span>'}
+                                        ' • <span style="color: #00ffff;"><i class="fas fa-crown"></i> Owner</span>' : 
+                                        ' • <span style="color: #9b59b6;"><i class="fas fa-eye"></i> Viewer</span>'}
                                 </div>
                             </div>
                             <div class="bookmark-actions">
@@ -1024,6 +1122,12 @@
                                     <i class="fas fa-external-link-alt"></i>
                                 </button>
                                 ${isOwner ? `
+                                    <button class="icon-btn" onclick="editBookmark('${bookmark.bookmark_id}', '${(bookmark.custom_name || bookmark.name).replace(/'/g, "\\'")}', '${bookmark.explore_key}')" title="Rename bookmark">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="icon-btn" onclick="updateBookmarkView('${bookmark.bookmark_id}', '${(bookmark.custom_name || bookmark.name).replace(/'/g, "\\'")}' )" title="Update to current view">
+                                        <i class="fas fa-save"></i>
+                                    </button>
                                     <button class="icon-btn delete" onclick="deleteBookmark('${bookmark.bookmark_id}')" title="Delete bookmark completely">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -1052,6 +1156,42 @@
             } catch (error) {
                 console.error('Error loading bookmarks:', error);
                 showNotification('Failed to load bookmarks', 'error');
+            }
+        }
+
+        async function syncBookmarks() {
+            try {
+                showNotification('🔄 Syncing bookmarks from Sigma...', 'success');
+                
+                const response = await fetch('/api/bookmarks/sync', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: currentUserEmail,
+                        workbookId: currentWorkbookId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const parts = [];
+                    if (data.added > 0) parts.push(`Added: ${data.added}`);
+                    if (data.updated > 0) parts.push(`Updated: ${data.updated}`);
+                    if (data.accessGranted > 0) parts.push(`Access granted: ${data.accessGranted}`);
+                    
+                    const summary = parts.length > 0 ? parts.join(', ') : 'All bookmarks already synced';
+                    showNotification(`✅ Sync complete! ${summary}`, 'success');
+                    // Reload the bookmarks list to show the synced bookmarks
+                    await loadBookmarks();
+                } else {
+                    showNotification('❌ Sync failed: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error syncing bookmarks:', error);
+                showNotification('❌ Failed to sync bookmarks', 'error');
             }
         }
 
@@ -1123,6 +1263,93 @@
             }
         }
 
+        async function editBookmark(bookmarkId, currentName, exploreKey) {
+            const newName = prompt('Enter new bookmark name:', currentName);
+            
+            if (!newName) {
+                return; // User cancelled
+            }
+            
+            if (newName === currentName) {
+                showNotification('No changes made', 'info');
+                return;
+            }
+            
+            try {
+                showNotification('Updating bookmark...', 'success');
+                
+                const response = await fetch(`/api/bookmarks/${bookmarkId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: newName,
+                        userEmail: currentUserEmail,
+                        workbookId: currentWorkbookId,
+                        exploreKey: exploreKey
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Bookmark updated successfully!', 'success');
+                    loadBookmarks(); // Reload the list to show the new name
+                } else {
+                    showNotification('Failed to update bookmark: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error updating bookmark:', error);
+                showNotification('Failed to update bookmark', 'error');
+            }
+        }
+
+        async function updateBookmarkView(bookmarkId, currentName) {
+            if (!embedLoaded) {
+                showNotification('Please wait for the dashboard to load first', 'error');
+                return;
+            }
+            
+            if (!currentExploreKey) {
+                showNotification('No view state detected. Please navigate to a specific view first.', 'error');
+                return;
+            }
+            
+            if (!confirm('Update this bookmark to save your current view?\n\nThis will change what view loads when you or others open this bookmark.')) {
+                return;
+            }
+            
+            try {
+                showNotification('Updating bookmark view...', 'success');
+                
+                const response = await fetch(`/api/bookmarks/${bookmarkId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: currentName,
+                        userEmail: currentUserEmail,
+                        workbookId: currentWorkbookId,
+                        exploreKey: currentExploreKey // Use current explore key from embed
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Bookmark view updated successfully!', 'success');
+                    loadBookmarks(); // Reload the list
+                } else {
+                    showNotification('Failed to update bookmark: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error updating bookmark:', error);
+                showNotification('Failed to update bookmark', 'error');
+            }
+        }
+
         async function removeAccess(bookmarkId) {
             if (!confirm('Are you sure you want to remove your access to this bookmark?')) {
                 return;
@@ -1189,6 +1416,20 @@
             }
         }
         
+        function updateDestinationFields() {
+            const destinationType = document.getElementById('destinationType').value;
+            const emailGroup = document.getElementById('emailRecipientsGroup');
+            const driveGroup = document.getElementById('googleDriveGroup');
+            
+            if (destinationType === 'email') {
+                emailGroup.style.display = 'block';
+                driveGroup.style.display = 'none';
+            } else if (destinationType === 'googleDrive') {
+                emailGroup.style.display = 'none';
+                driveGroup.style.display = 'block';
+            }
+        }
+        
         function updateCronExpression() {
             const frequency = document.getElementById('scheduleFrequency').value;
             const customCronGroup = document.getElementById('customCronGroup');
@@ -1223,25 +1464,47 @@
             const bookmarkId = document.getElementById('scheduleBookmark').value;
             const frequency = document.getElementById('scheduleFrequency').value;
             const format = document.getElementById('scheduleFormat').value;
-            const recipients = document.getElementById('scheduleRecipients').value.trim();
+            const destinationType = document.getElementById('destinationType').value;
             
-            if (!scheduleName || !bookmarkId || !recipients) {
+            if (!scheduleName || !bookmarkId) {
                 showNotification('Please fill in all required fields', 'error');
                 return;
+            }
+            
+            // Prepare destination config based on type
+            let destinationConfig = {};
+            
+            if (destinationType === 'email') {
+                const recipients = document.getElementById('scheduleRecipients').value.trim();
+                if (!recipients) {
+                    showNotification('Please enter at least one recipient email', 'error');
+                    return;
+                }
+                // Parse recipients into array
+                const recipientList = recipients.split(',').map(email => email.trim()).filter(email => email);
+                if (recipientList.length === 0) {
+                    showNotification('Please enter at least one valid recipient email', 'error');
+                    return;
+                }
+                destinationConfig.recipients = recipientList;
+            } else if (destinationType === 'googleDrive') {
+                const googleDriveUrl = document.getElementById('googleDriveUrl').value.trim();
+                if (!googleDriveUrl) {
+                    showNotification('Please enter a Google Drive folder URL', 'error');
+                    return;
+                }
+                // Basic validation for Google Drive URL
+                if (!googleDriveUrl.includes('drive.google.com')) {
+                    showNotification('Please enter a valid Google Drive folder URL', 'error');
+                    return;
+                }
+                destinationConfig.googleDriveFolderUrl = googleDriveUrl;
             }
             
             let cronExpression = document.getElementById('customCron').value;
             if (!cronExpression) {
                 updateCronExpression();
                 cronExpression = document.getElementById('customCron').value;
-            }
-            
-            // Parse recipients into array
-            const recipientList = recipients.split(',').map(email => email.trim()).filter(email => email);
-            
-            if (recipientList.length === 0) {
-                showNotification('Please enter at least one recipient email', 'error');
-                return;
             }
             
             try {
@@ -1255,10 +1518,8 @@
                     body: JSON.stringify({
                         scheduleName: scheduleName,
                         cronExpression: cronExpression,
-                        destinationType: 'email',
-                        destinationConfig: {
-                            recipients: recipientList
-                        },
+                        destinationType: destinationType,
+                        destinationConfig: destinationConfig,
                         format: format,
                         createdBy: currentUserEmail
                     })
@@ -1271,6 +1532,9 @@
                     document.getElementById('scheduleName').value = '';
                     document.getElementById('scheduleBookmark').value = '';
                     document.getElementById('scheduleRecipients').value = '';
+                    document.getElementById('googleDriveUrl').value = '';
+                    document.getElementById('destinationType').value = 'email';
+                    updateDestinationFields();
                     loadSchedules();
                 } else {
                     showNotification('Failed to create schedule: ' + (data.error || 'Unknown error'), 'error');
@@ -1290,8 +1554,19 @@
                 
                 if (data.schedules && data.schedules.length > 0) {
                     const schedulesHTML = data.schedules.map(schedule => {
-                        const recipients = schedule.destination_config.recipients || [];
                         const isActive = schedule.is_active === 1;
+                        
+                        // Format destination display based on type
+                        let destinationDisplay = '';
+                        if (schedule.destination_type === 'email') {
+                            const recipients = schedule.destination_config.recipients || [];
+                            destinationDisplay = `<i class="fas fa-envelope"></i> ${recipients.join(', ')}`;
+                        } else if (schedule.destination_type === 'googleDrive') {
+                            const driveUrl = schedule.destination_config.googleDriveFolderUrl || '';
+                            // Extract folder name from URL if possible, or show truncated URL
+                            const folderName = driveUrl.split('/').pop() || 'Google Drive Folder';
+                            destinationDisplay = `<i class="fab fa-google-drive"></i> <a href="${driveUrl}" target="_blank" style="color: inherit; text-decoration: underline;">${folderName.length > 30 ? folderName.substring(0, 30) + '...' : folderName}</a>`;
+                        }
                         
                         return `
                         <div class="bookmark-item">
@@ -1304,10 +1579,10 @@
                                 </div>
                                 <div class="bookmark-meta">
                                     <i class="fas fa-bookmark"></i> ${schedule.bookmark_name}
-                                    â€¢ <i class="fas fa-calendar"></i> ${schedule.cron_expression}
-                                    â€¢ <i class="fas fa-file"></i> ${schedule.format.toUpperCase()}
+                                    • <i class="fas fa-calendar"></i> ${schedule.cron_expression}
+                                    • <i class="fas fa-file"></i> ${schedule.format.toUpperCase()}
                                     <br>
-                                    <i class="fas fa-envelope"></i> ${recipients.join(', ')}
+                                    ${destinationDisplay}
                                 </div>
                             </div>
                             <div class="bookmark-actions">
@@ -1416,32 +1691,32 @@
             if (event.data && event.data.type) {
                 switch (event.data.type) {
                     case 'workbook:loaded':
-                        console.log('âœ… Workbook loaded successfully');
+                        console.log('✅ Workbook loaded successfully');
                         embedLoaded = true;
-                        showNotification('âœ… Dashboard loaded successfully!', 'success');
+                        showNotification('✅ Dashboard loaded successfully!', 'success');
                         
                         setTimeout(() => sendUserEmailToPlugin(), 1000);
                         setTimeout(() => sendUserEmailToPlugin(), 2000);
                         break;
                         
                     case 'workbook:exploreKey:onchange':
-                        console.log('ðŸ”‘ Explore key changed event:', event.data);
+                        console.log('🔑 Explore key changed event:', event.data);
                         if (event.data.exploreKey !== undefined) {
                             currentExploreKey = event.data.exploreKey;
-                            console.log('âœ… Updated explore key to:', currentExploreKey);
+                            console.log('✅ Updated explore key to:', currentExploreKey);
                         }
                         break;
                         
                     case 'workbook:pageload':
-                        console.log('ðŸ“„ Page loaded event:', event.data);
+                        console.log('📄 Page loaded event:', event.data);
                         if (event.data.exploreKey !== undefined) {
                             currentExploreKey = event.data.exploreKey;
-                            console.log('ðŸ”‘ Updated explore key to:', currentExploreKey);
+                            console.log('🔑 Updated explore key to:', currentExploreKey);
                         }
                         break;
                         
                     case 'workbook:error':
-                        console.error('âš ï¸ Workbook error:', event.data);
+                        console.error('⚠️ Workbook error:', event.data);
                         showNotification('Error loading dashboard: ' + (event.data.message || 'Unknown error'), 'error');
                         break;
                 }
@@ -1459,11 +1734,25 @@
             loading.style.display = 'flex';
             iframe.style.display = 'none';
             
-            // NO region or environment parameters anymore!
-            let url = `/api/signed-url?workbookId=${currentWorkbookId}&workbookUrlId=${encodeURIComponent(currentWorkbookUrlId)}&email=${encodeURIComponent(currentUserEmail)}`;
+            // Determine item type
+            const itemType = currentItemType || 'workbook';
+            
+            // Build URL for v2 endpoint that supports both types
+            let url = `/api/signed-url-v2?email=${encodeURIComponent(currentUserEmail)}&itemType=${itemType}`;
+            
+            // Add the appropriate ID parameters based on item type
+            if (itemType === 'data-model') {
+                url += `&dataModelId=${currentWorkbookId}&dataModelUrlId=${encodeURIComponent(currentWorkbookUrlId)}`;
+            } else {
+                url += `&workbookId=${currentWorkbookId}&workbookUrlId=${encodeURIComponent(currentWorkbookUrlId)}`;
+            }
+            
             if (selectedBookmarkId) {
                 url += `&bookmarkId=${selectedBookmarkId}`;
             }
+            
+            console.log('🔧 Requesting signed URL:', url);
+            console.log('📝 Item Type:', itemType);
             
             fetch(url)
                 .then(function(response) {
@@ -1474,6 +1763,16 @@
                 })
                 .then(function(data) {
                     if (data.url) {
+                        console.log('✅ Received signed URL:', data.url);
+                        
+                        // Verify correct URL type
+                        if (itemType === 'data-model' && !data.url.includes('/data-model/')) {
+                            console.warn('⚠️ Expected data model URL but got workbook URL');
+                        }
+                        if (itemType === 'workbook' && !data.url.includes('/workbook/')) {
+                            console.warn('⚠️ Expected workbook URL but got data model URL');
+                        }
+                        
                         iframe.src = data.url;
                         
                         iframe.onload = function() {
@@ -1488,8 +1787,8 @@
                             }
                         }, 10000);
                         
-                        console.log('Dashboard loading for user: ' + currentUserEmail);
-                        console.log('Workbook: ' + currentWorkbookId + ' (URL ID: ' + currentWorkbookUrlId + ')');
+                        console.log(`${itemType === 'data-model' ? 'Data Model' : 'Dashboard'} loading for user: ` + currentUserEmail);
+                        console.log(`${itemType === 'data-model' ? 'Data Model' : 'Workbook'}: ` + currentWorkbookId + ' (URL ID: ' + currentWorkbookUrlId + ')');
                     } else {
                         throw new Error(data.error || 'No URL received from server');
                     }
@@ -1497,7 +1796,7 @@
                 .catch(function(error) {
                     console.error('Error loading embed:', error);
                     loading.style.display = 'none';
-                    showNotification('Failed to load dashboard', 'error');
+                    showNotification(`Failed to load ${itemType === 'data-model' ? 'data model' : 'dashboard'}`, 'error');
                 });
         }
         
@@ -1506,22 +1805,51 @@
                 return;
             }
             
-            const workbook = getWorkbookFromURL();
-            if (!workbook) {
+            const item = getWorkbookFromURL();
+            if (!item) {
                 return;
             }
             
-            currentWorkbookId = workbook.id;
-            currentWorkbookUrlId = workbook.urlId;
-            currentWorkbookName = workbook.name;
+            // Store the item details in global variables
+            currentWorkbookId = item.id;
+            currentWorkbookUrlId = item.urlId;
+            currentWorkbookName = item.name;
+            currentItemType = item.type; // New: track the item type
             
-            console.log('Loaded workbook:', {
+            console.log('Loaded item:', {
                 id: currentWorkbookId,
                 urlId: currentWorkbookUrlId,
-                name: currentWorkbookName
+                name: currentWorkbookName,
+                type: currentItemType
             });
             
-            document.getElementById('currentWorkbookName').textContent = currentWorkbookName;
+            // Update the display name with an icon based on type
+            const nameElement = document.getElementById('currentWorkbookName');
+            if (currentItemType === 'data-model') {
+                nameElement.innerHTML = `<span style="color: #9333ea;">🗃️</span> ${currentWorkbookName}`;
+                // Hide bookmark functionality for data models (they don't support bookmarks)
+                document.querySelectorAll('.bookmark-btn').forEach(btn => {
+                    btn.style.display = 'none';
+                });
+                // Also hide scheduler since it depends on bookmarks
+                document.querySelectorAll('[onclick="openSchedulerModal()"]').forEach(btn => {
+                    btn.style.display = 'none';
+                });
+            } else {
+                nameElement.innerHTML = `<span style="color: #06b6d4;">📊</span> ${currentWorkbookName}`;
+                // Show bookmark functionality for workbooks
+                document.querySelectorAll('.bookmark-btn').forEach(btn => {
+                    btn.style.display = 'inline-block';
+                });
+                // Show scheduler for workbooks
+                document.querySelectorAll('[onclick="openSchedulerModal()"]').forEach(btn => {
+                    btn.style.display = 'inline-block';
+                });
+                
+                // Initialize bookmark functionality for workbooks
+                fetchUserTeams();
+                loadBookmarks();
+            }
             
             createParticles();
             loadEmbed();

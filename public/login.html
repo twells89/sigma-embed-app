@@ -393,19 +393,33 @@
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>Authenticating...';
             loginBtn.disabled = true;
             
-            // Simulate authentication (always successful)
-            setTimeout(function() {
-                // Store user email in localStorage for the dashboard to use
-                localStorage.setItem('userEmail', email);
-                
-                showNotification('Authentication successful! Redirecting...', 'success');
-                
-                // Redirect to dashboard after short delay
-                setTimeout(function() {
-                    window.location.href = '/';
-                }, 1500);
-                
-            }, 1000);
+            fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    localStorage.setItem('userEmail', data.email);
+                    showNotification('Authentication successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1500);
+                } else {
+                    showNotification(data.error || 'Authentication failed', 'error');
+                    loginBtn.innerHTML = originalBtnText;
+                    loginBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Login error:', error);
+                showNotification('An unexpected error occurred. Please try again.', 'error');
+                loginBtn.innerHTML = originalBtnText;
+                loginBtn.disabled = false;
+            });
         });
         
         // Auto-focus email field

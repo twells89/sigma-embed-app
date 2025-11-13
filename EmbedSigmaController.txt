@@ -1,0 +1,145 @@
+public class EmbedSigmaController {
+
+    @AuraEnabled(cacheable=true)
+    public static String getIframeUrl(Id recordId, String filterValue) {
+        try {
+            // --- 1️⃣ Get current Salesforce user email ---
+            User userRec = [
+                SELECT Id, Email
+                FROM User
+                WHERE Id = :UserInfo.getUserId()
+                LIMIT 1
+            ];
+            String userEmail = userRec.Email;
+            System.debug('🔍 Salesforce user email: ' + userEmail);
+
+            // --- 2️⃣ Sigma Configuration ---
+            String embedPath = 'https://app.sigmacomputing.com/curvature/workbook/12xt08vF9FLDa9vD2HHpxb';
+            String clientId  = '5787b6f48047c7c3d55833fb62f82e38526853cbcedcd8bbcde07366ed7de258';
+            String secret    = '8657795592a007f0c22a1bd237e9185dc9743f078ef3feff25a08fc9bd046cdcd5691fcf7375694b29e302a30277ebfeeec489388046e661bcd07d218cb69666';
+
+            // --- Remote Site requirement ---
+            // Must add https://aws-api.sigmacomputing.com in Salesforce Remote Site Settings
+
+            // --- 3️⃣ Get Sigma API Bearer Token ---
+            HttpRequest tokenReq = new HttpRequest();
+            tokenReq.setEndpoint('https://aws-api.sigmacomputing.com/v2/auth/token');
+            tokenReq.setMethod('POST');
+            tokenReq.setHeader('Content-Type', 'application/x-www-form-urlencoded');
+            tokenReq.setBody(
+                'grant_type=client_credentials' +
+                '&client_id=' + clientId +
+                '&client_secret=' + secret
+            );
+
+            Http http = new Http();
+            HttpResponse tokenRes = http.send(tokenReq);
+
+            if (tokenRes.getStatusCode() != 200) {
+                System.debug('❌ Sigma token request failed: ' + tokenRes.getBody());
+                throw new AuraHandledException('Failed to obtain Sigma bearer token');
+            }
+
+            Map<String, Object> tokenJson = (Map<String, Object>) JSON.deserializeUntyped(tokenRes.getBody());
+            String bearerToken = (String) tokenJson.get('access_token');
+
+            // --- 4️⃣ Lookup Sigma Member to check userKind ---
+            String sigmaMembersUrl = 'https://aws-api.sigmacomputing.com/v2/members?search=' +
+                EncodingUtil.urlEncode(userEmail, 'UTF-8');
+
+            HttpRequest memberReq = new HttpRequest();
+            memberReq.setEndpoint(sigmaMembersUrl);
+            memberReq.setMethod('GET');
+            memberReq.setHeader('Authorization', 'Bearer ' + bearerToken);
+            memberReq.setHeader('Content-Type', 'application/json');
+
+            HttpResponse memberRes = http.send(memberReq);
+
+            Boolean isInternal = false;
+
+            if (memberRes.getStatusCode() == 200) {
+                Map<String, Object> memberJson =
+                    (Map<String, Object>) JSON.deserializeUntyped(memberRes.getBody());
+                List<Object> entries = (List<Object>) memberJson.get('entries');
+
+                if (!entries.isEmpty()) {
+                    Map<String, Object> member = (Map<String, Object>) entries[0];
+                    String userKind = (String) member.get('userKind');
+                    isInternal = (userKind != null && userKind.toLowerCase() == 'internal');
+                    System.debug('🔍 Sigma userKind = ' + userKind + ' | isInternal = ' + isInternal);
+                } else {
+                    System.debug('⚠️ No Sigma member entry found for user');
+                }
+            } else {
+                System.debug('⚠️ Sigma member lookup failed: ' + memberRes.getBody());
+            }
+
+            // --- 5️⃣ Build JWT Header ---
+            Map<String, Object> header = new Map<String, Object>{
+                'alg' => 'HS256',
+                'typ' => 'JWT',
+                'kid' => clientId
+            };
+
+            // --- 6️⃣ Build JWT Payload ---
+            Long nowSeconds = DateTime.now().getTime() / 1000;
+            Long expSeconds = nowSeconds + 60; // short expiry = 60s
+
+            Map<String, Object> payload = new Map<String, Object>{
+                'sub' => userEmail,
+                'jti' => String.valueOf(Crypto.getRandomLong()),
+                'iat' => nowSeconds,
+                'exp' => expSeconds,
+                'iss' => clientId,
+                'aud' => 'sigmacomputing',
+                'ver' => '1.1'
+            };
+
+            if (!isInternal) {
+                // External / embed user
+                payload.put('account_type', 'Viewer');
+                // ✅ Proper array for teams (matches Node.js format)
+                List<String> externalTeams = new List<String>{
+                    'SEC - Mgmt, Finance, Marketing, Product, Supply Chain, IT'
+                };
+                payload.put('teams', externalTeams);
+                System.debug('🧾 External user detected – added Viewer account_type and teams');
+            } else {
+                System.debug('🏢 Internal user detected – no extra claims added');
+            }
+
+            // --- 7️⃣ Generate JWT ---
+            String jwt = buildJwt(header, payload, secret);
+
+            // --- 8️⃣ Construct Final Embed URL ---
+            String finalUrl = embedPath +
+                '?:jwt=' + jwt +
+                '&:embed=true' +
+                '&:menu_position=bottom';
+
+            System.debug('✅ Sigma JWT Embed URL: ' + finalUrl);
+            return finalUrl;
+
+        } catch (Exception e) {
+            System.debug('❌ Error generating Sigma embed URL: ' + e.getMessage());
+            throw new AuraHandledException('Error generating Sigma embed URL: ' + e.getMessage());
+        }
+    }
+
+    // --- Helper: Build JWT ---
+    private static String buildJwt(Map<String, Object> header, Map<String, Object> payload, String secret) {
+        String headerEncoded = base64UrlEncode(Blob.valueOf(JSON.serialize(header)));
+        String payloadEncoded = base64UrlEncode(Blob.valueOf(JSON.serialize(payload)));
+        String signingInput = headerEncoded + '.' + payloadEncoded;
+        Blob mac = Crypto.generateMac('HmacSHA256', Blob.valueOf(signingInput), Blob.valueOf(secret));
+        String signatureEncoded = base64UrlEncode(mac);
+        return headerEncoded + '.' + payloadEncoded + '.' + signatureEncoded;
+    }
+
+    // --- Helper: Base64URL Encode (JWT-safe) ---
+    private static String base64UrlEncode(Blob inputBlob) {
+        String result = EncodingUtil.base64Encode(inputBlob);
+        result = result.replace('+', '-').replace('/', '_').replace('=', '');
+        return result;
+    }
+}
