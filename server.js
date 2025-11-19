@@ -1,4 +1,6 @@
 // Enhanced server.js with Admin Panel and User Configuration Management
+require('dotenv').config();
+
 const express = require('express');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
@@ -7,7 +9,8 @@ const axios = require('axios');
 const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
+
 
 // Middleware
 app.use(express.json({ limit: '50mb' }));
@@ -16,11 +19,10 @@ app.use(express.static('public'));
 
 // CORS
 app.use((req, res, next) => {
-  const allowedOrigins = [
-    'https://twells89.github.io',
-    'http://localhost:4200',
-    'https://app.sigmacomputing.com'
-  ];
+  // Parse allowed origins from environment variable
+  const allowedOrigins = process.env.ALLOWED_ORIGINS 
+    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+    : ['https://twells89.github.io', 'http://localhost:4200', 'https://app.sigmacomputing.com'];
   
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
@@ -38,7 +40,8 @@ app.use((req, res, next) => {
 });
 
 // Initialize SQLite Database
-const db = new sqlite3.Database('./bookmarks.db', (err) => {
+const databasePath = process.env.DATABASE_PATH || './bookmarks.db';
+const db = new sqlite3.Database(databasePath, (err) => {
   if (err) {
     console.error('Error opening database:', err);
   } else {
@@ -46,7 +49,6 @@ const db = new sqlite3.Database('./bookmarks.db', (err) => {
     initializeDatabase();
   }
 });
-
 // Create new schema for bookmark system and user configurations
 function initializeDatabase() {
   db.serialize(() => {
@@ -175,26 +177,28 @@ function initializeDatabase() {
 }
 
 // Sigma API config
-const SIGMA_BASE_URL = 'https://aws-api.sigmacomputing.com/v2';
+const SIGMA_BASE_URL = process.env.SIGMA_BASE_URL || 'https://aws-api.sigmacomputing.com/v2';
 const SIGMA_MEMBERS_URL = `${SIGMA_BASE_URL}/members`;
 const SIGMA_WORKBOOKS_URL = `${SIGMA_BASE_URL}/workbooks`;
-const SIGMA_DATA_MODELS_URL = `${SIGMA_BASE_URL}/dataModels`;  // Changed to camelCase
+const SIGMA_DATA_MODELS_URL = `${SIGMA_BASE_URL}/dataModels`;
 const SIGMA_TEAMS_URL = `${SIGMA_BASE_URL}/teams`;
 const SIGMA_ACCOUNT_TYPES_URL = `${SIGMA_BASE_URL}/account-types`;
 const SIGMA_USER_ATTRIBUTES_URL = `${SIGMA_BASE_URL}/user-attributes`;
 
-const embedClientId = 'ClientId';
-const embedSecret = 'Secret';
-const sigmaOrg = 'tj-wells-1989';
+const embedClientId = process.env.EMBED_CLIENT_ID;
+const embedSecret = process.env.EMBED_SECRET;
+const sigmaOrg = process.env.SIGMA_ORG;
 
-const clientId = 'ClientId';
-const clientSecret = 'Secret';
+const clientId = process.env.CLIENT_ID;
+const clientSecret = process.env.CLIENT_SECRET;
+
 
 // Feature flags
 const FEATURES = {
-  DATA_MODELS: process.env.ENABLE_DATA_MODELS !== 'false', // Default to true, set ENABLE_DATA_MODELS=false to disable
+  DATA_MODELS: process.env.ENABLE_DATA_MODELS !== 'false', // Default to true
   DATA_MODELS_FALLBACK: true // Try to find data models in files endpoint if dedicated endpoint fails
 };
+
 
 // Token cache to prevent rate limiting
 const tokenCache = {
