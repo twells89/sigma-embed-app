@@ -3,75 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plugs Electronics - Login</title>
+    <title>Plugs Electronics - Admin Panel</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* ---------- Reset & base ---------- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, button {
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue',
+                       "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji", sans-serif;
         }
-        
         body {
-            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-            background: linear-gradient(135deg, #0c0c1d 0%, #1a1a2e 50%, #16213e 100%);
-            color: #ffffff;
-            min-height: 100vh;
+          background: linear-gradient(135deg,#0c0c1d 0%,#1a1a2e 50%,#16213e 100%);
+          color: #fff;
+          min-height: 100vh;
+          overflow-x: hidden;
+        }
+
+        /* ---------- Header ---------- */
+        .container { position: relative; z-index: 10; padding: 10px 20px; }
+        .header {
+          background: linear-gradient(135deg, rgba(0,255,255,0.06), rgba(0,128,255,0.04));
+          backdrop-filter: blur(14px);
+          border: 1px solid rgba(0,255,255,0.08);
+          border-radius: 14px;
+          padding: 20px 26px;
+          text-align: center;
+          margin-bottom: 15px;
+        }
+        .logo { display:flex; gap:12px; align-items:center; justify-content:center; margin-bottom:6px; }
+        .logo i { font-size:2rem; background:linear-gradient(45deg,#ff6b35,#f7931e); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .page-title { font-size:1.9rem; font-weight:700; background:linear-gradient(45deg,#ff6b35,#f7931e); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-transform:uppercase; letter-spacing:2px; }
+        .subtitle { color:#00ffff; opacity:0.9; margin-top:8px; font-size:0.95rem; }
+
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
             display: flex;
             align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .user-email {
+            color: #00ffff;
+            font-weight: 600;
+        }
+        
+        .admin-badge {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .logout-btn {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+            color: #fff;
+            padding: 6px 15px;
+            border-radius: 15px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .nav-controls { display:flex; gap:12px; justify-content:center; margin-top:14px; }
+        .nav-btn {
+          background: linear-gradient(45deg,#6c757d,#495057);
+          color:#fff; padding:8px 18px; border-radius:16px; text-decoration:none; display:inline-flex; gap:8px; align-items:center;
+          font-weight:600; font-size:13px; border:none; cursor:pointer;
+        }
+        .nav-btn.active { background: linear-gradient(45deg,#ff6b35,#f7931e); }
+
+        /* ---------- Access Denied ---------- */
+        .access-denied {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            overflow-x: hidden;
-        }
-        
-        .bg-animation {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-        }
-        
-        .particle {
-            position: absolute;
-            background: linear-gradient(45deg, #00ffff, #0080ff);
-            border-radius: 50%;
-            animation: float 6s ease-in-out infinite;
-            opacity: 0.1;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-        
-        .login-container {
-            position: relative;
-            z-index: 10;
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 128, 255, 0.1) 100%);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 40px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-        
-        .logo {
+            min-height: 60vh;
             text-align: center;
-            margin-bottom: 30px;
+            padding: 20px;
         }
         
-        .logo i {
-            font-size: 3rem;
-            background: linear-gradient(45deg, #00ffff, #0080ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: pulse 2s ease-in-out infinite;
-            margin-bottom: 10px;
+        .access-denied i {
+            font-size: 5rem;
+            color: #dc3545;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
         }
         
         @keyframes pulse {
@@ -79,361 +110,676 @@
             50% { transform: scale(1.1); }
         }
         
-        .company-name {
+        .access-denied h2 {
+            color: #ff6b35;
             font-size: 2rem;
-            font-weight: 700;
-            background: linear-gradient(45deg, #00ffff, #0080ff, #00ffff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
         
-        .tagline {
-            font-size: 0.9rem;
-            opacity: 0.8;
-            font-weight: 300;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+        .access-denied p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
         }
-        
-        .login-form {
-            margin-top: 30px;
+
+        /* ---------- Layout: two columns ---------- */
+        .content-grid {
+          display: grid;
+          grid-template-columns: 360px 1fr;
+          gap: 20px;
+          align-items: stretch;
         }
-        
-        .form-group {
-            margin-bottom: 20px;
+
+        :root { --panel-max-height: calc(100vh - 240px); }
+
+        .user-list-panel,
+        .config-panel {
+          display: flex;
+          flex-direction: column;
+          background: linear-gradient(180deg, rgba(8,24,40,0.18), rgba(8,24,40,0.08));
+          border: 1px solid rgba(0,255,255,0.06);
+          border-radius: 12px;
+          padding: 18px;
+          min-height: 420px;
+          max-height: var(--panel-max-height);
+          overflow: hidden;
         }
-        
-        .form-label {
-            display: block;
-            font-size: 0.9rem;
-            color: #00ffff;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
+
+        .panel-header {
+          display:flex; justify-content:space-between; align-items:center;
+          padding-bottom:10px; margin-bottom:10px;
+          border-bottom: 1px solid rgba(0,255,255,0.03);
+          flex: 0 0 auto;
         }
-        
+        .panel-title { color:#00ffff; font-weight:600; font-size:1.05rem; display:flex; gap:10px; align-items:center; }
+
+        .user-list { flex: 1 1 auto; overflow-y: auto; padding-right:6px; display:flex; flex-direction:column; gap:10px; }
+        .user-item {
+          background: rgba(0,0,0,0.18); border: 1px solid rgba(0,255,255,0.04);
+          border-radius:10px; padding:12px; cursor:pointer; transition:all .18s ease;
+        }
+        .user-item:hover { transform: translateX(4px); border-color: rgba(0,255,255,0.08); }
+        .user-item.active { background: linear-gradient(135deg, rgba(255,107,53,0.12), rgba(247,147,30,0.08)); border-color: rgba(255,107,53,0.18); }
+
+        .user-email { color:#00ffff; font-weight:700; font-size:14px; margin-bottom:6px; }
+        .user-meta { color: rgba(255,255,255,0.65); font-size:13px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+
+        .search-box {
+          width:100%; padding:10px 12px; border-radius:10px; margin:12px 0;
+          background: rgba(0,0,0,0.25); border: 1px solid rgba(0,255,255,0.04); color:#fff; font-size:14px;
+        }
+
+        #configContent { display:flex; flex-direction:column; gap:8px; flex:1 1 auto; overflow-y:auto; padding-right:6px; }
+        .no-selection {
+          display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+          color: rgba(255,255,255,0.45); padding: 30px; flex:1 1 auto;
+        }
+        .no-selection i { font-size:4rem; opacity:0.28; margin-bottom:12px; color: rgba(255,255,255,0.12); }
+
+        .form-section { margin-bottom:18px; }
+        .form-label { color:#00ffff; font-weight:700; margin-bottom:8px; display:block; font-size:13px; text-transform:uppercase; letter-spacing:1px; }
         .form-input {
-            width: 100%;
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 128, 255, 0.1));
-            border: 1px solid rgba(0, 255, 255, 0.4);
-            color: #ffffff;
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 1rem;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-            outline: none;
+          width:100%; padding:10px 12px; border-radius:10px; background: rgba(0,0,0,0.24); color:#fff; border:1px solid rgba(0,255,255,0.04);
         }
-        
-        .form-input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-        
-        .form-input:focus {
-            border-color: #00ffff;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-        
-        .login-btn {
-            width: 100%;
-            background: linear-gradient(45deg, #00ffff, #0080ff);
-            border: none;
-            color: #000;
-            padding: 12px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-        
-        .login-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.5s;
-        }
-        
-        .login-btn:hover::before {
-            left: 100%;
-        }
-        
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 255, 255, 0.3);
-        }
-        
-        .login-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .login-btn i {
-            margin-right: 8px;
-        }
-        
+        .form-input:focus { outline:none; box-shadow: 0 0 10px rgba(0,255,255,0.06); border-color: rgba(0,255,255,0.12); }
+
+        .multi-select { background: rgba(0,0,0,0.18); border-radius:8px; padding:8px; max-height:220px; overflow-y:auto; border:1px solid rgba(0,255,255,0.03); }
+        .checkbox-item { display:flex; align-items:center; gap:8px; padding:6px; border-radius:6px; }
+
+        .attribute-values { margin-top:8px; display:flex; gap:8px; }
+        .attribute-value-input { padding:8px 10px; border-radius:8px; background: rgba(0,0,0,0.16); color:#fff; border:1px solid rgba(0,255,255,0.03); flex:1; }
+
+        .action-buttons { display:flex; gap:10px; margin-top:12px; }
+        .btn { padding:10px 18px; border-radius:16px; font-weight:700; cursor:pointer; border:none; }
+        .btn-save { background: linear-gradient(45deg,#00ffff,#0080ff); color:#000; }
+        .btn-delete { background: linear-gradient(45deg,#e74c3c,#c0392b); color:#fff; }
+        .btn-cancel { background: linear-gradient(45deg,#6c757d,#495057); color:#fff; }
+
+        .loading-spinner { width:20px; height:20px; border:2px solid rgba(0,255,255,0.12); border-top:2px solid #00ffff; border-radius:50%; animation:spin 1s linear infinite; display:inline-block; }
+        @keyframes spin { 0%{transform:rotate(0)}100%{transform:rotate(360deg)} }
+
         .notification {
-            margin-top: 20px;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            text-align: center;
-            opacity: 0;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
+          position:fixed; top:18px; right:18px; z-index:1000; padding:12px 16px; border-radius:10px; display:inline-block;
+          transform:translateX(350px); opacity:0; transition:all .28s ease; max-width:320px;
+          background: linear-gradient(135deg, rgba(0,255,255,0.06), rgba(0,128,255,0.06)); border:1px solid rgba(0,255,255,0.06); color:#00ffff;
+        }
+        .notification.show { transform:translateX(0); opacity:1; }
+
+        .user-type-badge { padding:4px 8px; border-radius:10px; font-size:12px; font-weight:700; margin-left:8px; }
+        .badge-internal { background: rgba(155,89,182,0.12); color:#9b59b6; border:1px solid rgba(155,89,182,0.06); }
+        .badge-external { background: rgba(39,174,96,0.12); color:#27ae60; border:1px solid rgba(39,174,96,0.06); }
+        .badge-admin { background: rgba(255,107,53,0.12); color:#ff6b35; border:1px solid rgba(255,107,53,0.06); }
+
+        .admin-checkbox { margin-bottom:12px; }
+        .admin-checkbox label { display:flex; align-items:center; gap:8px; color:#ff6b35; font-weight:600; }
+
+        .password-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0,255,255,0.1);
         }
         
-        .notification.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        .notification.error {
-            background: linear-gradient(135deg, rgba(220, 53, 69, 0.2), rgba(255, 0, 100, 0.2));
-            border: 1px solid rgba(220, 53, 69, 0.5);
-            color: #dc3545;
-        }
-        
-        .notification.success {
-            background: linear-gradient(135deg, rgba(40, 167, 69, 0.2), rgba(32, 201, 151, 0.2));
-            border: 1px solid rgba(40, 167, 69, 0.5);
-            color: #28a745;
-        }
-        
-        .notification.info {
-            background: linear-gradient(135deg, rgba(0, 123, 255, 0.2), rgba(0, 255, 255, 0.2));
-            border: 1px solid rgba(0, 123, 255, 0.5);
-            color: #00ffff;
-        }
-        
-        .password-requirements {
-            margin-top: 10px;
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.6);
-            text-align: left;
-        }
-        
-        .password-requirements ul {
-            list-style: none;
-            padding-left: 0;
+        .password-info {
+            color: rgba(255,255,255,0.6);
+            font-size: 12px;
             margin-top: 5px;
         }
-        
-        .password-requirements li {
-            margin-bottom: 3px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .password-requirements i {
-            font-size: 0.7rem;
-            color: #00ffff;
-        }
-        
-        @media (max-width: 768px) {
-            .login-container {
-                margin: 20px;
-                padding: 30px 25px;
-            }
-            
-            .company-name {
-                font-size: 1.6rem;
-                letter-spacing: 1px;
-            }
-            
-            .logo i {
-                font-size: 2.5rem;
-            }
+
+        @media (max-width: 900px) {
+          .content-grid { grid-template-columns: 1fr; }
+          :root { --panel-max-height: none; }
+          .user-list-panel, .config-panel { max-height: none; min-height: auto; }
         }
     </style>
 </head>
 <body>
-    <div class="bg-animation" id="bgAnimation"></div>
+    <div class="notification" id="notification"></div>
     
-    <div class="login-container">
-        <div class="logo">
-            <i class="fas fa-bolt"></i>
-            <h1 class="company-name">Plugs Electronics</h1>
-            <p class="tagline">Secure Access Portal</p>
+    <div class="container">
+        <div class="header">
+            <div class="user-info">
+                <span class="user-email" id="currentUserEmail">Loading...</span>
+                <span class="admin-badge">ADMIN</span>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+            <div class="logo">
+                <i class="fas fa-user-shield"></i>
+                <h1 class="page-title">Admin Panel</h1>
+            </div>
+            <p class="subtitle">User Configuration Management</p>
+            <div class="nav-controls">
+                <a href="/workbooks" class="nav-btn">
+                    <i class="fas fa-book"></i>Workbooks
+                </a>
+                <a href="/" class="nav-btn">
+                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                </a>
+                <a href="/admin" class="nav-btn active">
+                    <i class="fas fa-user-shield"></i>Admin
+                </a>
+            </div>
         </div>
         
-        <form class="login-form" id="loginForm">
-            <div class="form-group">
-                <label class="form-label" for="email">Email Address</label>
-                <input 
-                    type="email" 
-                    id="email" 
-                    class="form-input" 
-                    placeholder="Enter your email address"
-                    required
-                    autocomplete="username"
-                >
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label" for="password">Password</label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    class="form-input" 
-                    placeholder="Enter your password"
-                    required
-                    autocomplete="current-password"
-                >
-                <div class="password-requirements">
-                    <ul>
-                        <li><i class="fas fa-lock"></i> Passwords are case-sensitive</li>
-                        <li><i class="fas fa-shield-alt"></i> Secure authentication required</li>
-                    </ul>
+        <div id="adminContent" style="display: none;">
+            <div class="content-grid">
+                <div class="user-list-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <i class="fas fa-users"></i> Users
+                        </h2>
+                        <button class="btn btn-save" onclick="showAddUserForm()">
+                            <i class="fas fa-plus"></i> Add User
+                        </button>
+                    </div>
+                    <input type="text" class="search-box" placeholder="Search users..." onkeyup="filterUsers(this.value)">
+                    <div class="user-list" id="userList">
+                        <div style="text-align: center; padding: 20px; color: rgba(255,255,255,0.5);">
+                            <div class="loading-spinner"></div>
+                            <div style="margin-top: 10px;">Loading users...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="config-panel">
+                    <div id="configContent">
+                        <div class="no-selection">
+                            <i class="fas fa-user-cog"></i>
+                            <h3>Select a user to configure</h3>
+                            <p style="margin-top: 10px;">Choose a user from the list to manage their teams, account type, and attributes</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <button type="submit" class="login-btn" id="loginBtn">
-                <i class="fas fa-sign-in-alt"></i>Access Application
-            </button>
-            
-            <div class="notification" id="notification"></div>
-        </form>
+        </div>
+        
+        <div id="accessDenied" class="access-denied" style="display: none;">
+            <i class="fas fa-shield-alt"></i>
+            <h2>Access Denied</h2>
+            <p>You need admin privileges to access this panel</p>
+            <a href="/" class="nav-btn">
+                <i class="fas fa-home"></i> Return to Dashboard
+            </a>
+        </div>
     </div>
-
+    
     <script>
-        function createParticles() {
-            const bgAnimation = document.getElementById('bgAnimation');
-            const particleCount = 15;
+        let currentUser = null;
+        let users = [];
+        let sigmaTeams = [];
+        let sigmaAccountTypes = [];
+        let sigmaUserAttributes = [];
+        let isNewUser = false;
+        let sessionToken = '';
+        let currentUserIsAdmin = false;
+        
+        function checkAuthentication() {
+            const token = localStorage.getItem('sessionToken');
+            const userEmail = localStorage.getItem('userEmail');
+            const isAdmin = localStorage.getItem('isAdmin') === 'true';
             
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.top = Math.random() * 100 + '%';
-                particle.style.width = Math.random() * 4 + 2 + 'px';
-                particle.style.height = particle.style.width;
-                particle.style.animationDelay = Math.random() * 6 + 's';
-                particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
-                bgAnimation.appendChild(particle);
+            if (!token) {
+                window.location.href = '/login';
+                return false;
             }
+            
+            // Verify session and admin status
+            fetch('/api/verify-session', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.valid) {
+                    localStorage.clear();
+                    window.location.href = '/login';
+                } else if (!data.isAdmin) {
+                    document.getElementById('adminContent').style.display = 'none';
+                    document.getElementById('accessDenied').style.display = 'flex';
+                } else {
+                    sessionToken = token;
+                    currentUserIsAdmin = true;
+                    document.getElementById('currentUserEmail').textContent = data.email;
+                    document.getElementById('adminContent').style.display = 'block';
+                    document.getElementById('accessDenied').style.display = 'none';
+                    loadSigmaData();
+                    loadUsers();
+                }
+            })
+            .catch(error => {
+                console.error('Session verification failed:', error);
+                localStorage.clear();
+                window.location.href = '/login';
+            });
+            
+            return true;
         }
         
-        function showNotification(message, type) {
+        function logout() {
+            fetch('/api/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${sessionToken}`
+                }
+            })
+            .then(() => {
+                localStorage.clear();
+                window.location.href = '/login';
+            });
+        }
+        
+        function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
             notification.textContent = message;
             notification.className = 'notification ' + type + ' show';
-            
-            setTimeout(function() {
+            setTimeout(() => {
                 notification.classList.remove('show');
             }, 5000);
         }
         
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const loginBtn = document.getElementById('loginBtn');
-            const originalBtnText = loginBtn.innerHTML;
-            
-            if (!email || !password) {
-                showNotification('Please enter both email and password', 'error');
-                return;
+        async function loadSigmaData() {
+            try {
+                const headers = {
+                    'Authorization': `Bearer ${sessionToken}`
+                };
+                
+                // Load teams
+                const teamsResponse = await fetch('/api/sigma/teams', { headers });
+                const teamsData = await teamsResponse.json();
+                sigmaTeams = teamsData.teams || [];
+                
+                // Load account types
+                const accountTypesResponse = await fetch('/api/sigma/account-types', { headers });
+                const accountTypesData = await accountTypesResponse.json();
+                sigmaAccountTypes = accountTypesData.accountTypes || [];
+                
+                // Load user attributes
+                const attributesResponse = await fetch('/api/sigma/user-attributes', { headers });
+                const attributesData = await attributesResponse.json();
+                sigmaUserAttributes = attributesData.attributes || [];
+                
+                console.log('Loaded Sigma data:', {
+                    teams: sigmaTeams.length,
+                    accountTypes: sigmaAccountTypes.length,
+                    attributes: sigmaUserAttributes.length
+                });
+            } catch (error) {
+                console.error('Error loading Sigma data:', error);
+                showNotification('Failed to load Sigma configuration data', 'error');
             }
-            
-            // Simple email validation
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                showNotification('Please enter a valid email address', 'error');
-                return;
-            }
-            
-            // Show loading state
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>Authenticating...';
-            loginBtn.disabled = true;
-            
-            fetch('/api/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Store session token and user info
-                    localStorage.setItem('sessionToken', data.token);
-                    localStorage.setItem('userEmail', data.email);
-                    localStorage.setItem('isAdmin', data.isAdmin);
-                    
-                    if (data.isAdmin) {
-                        showNotification('Admin authentication successful! Redirecting...', 'success');
-                    } else {
-                        showNotification('Authentication successful! Redirecting...', 'success');
-                    }
-                    
-                    setTimeout(() => {
-                        window.location.href = '/';
-                    }, 1500);
-                } else {
-                    showNotification(data.error || 'Authentication failed', 'error');
-                    loginBtn.innerHTML = originalBtnText;
-                    loginBtn.disabled = false;
-                }
-            })
-            .catch(error => {
-                console.error('Login error:', error);
-                showNotification('An unexpected error occurred. Please try again.', 'error');
-                loginBtn.innerHTML = originalBtnText;
-                loginBtn.disabled = false;
-            });
-        });
+        }
         
-        // Auto-focus email field
-        document.addEventListener('DOMContentLoaded', function() {
-            createParticles();
-            document.getElementById('email').focus();
-            
-            // Check if already logged in
-            const token = localStorage.getItem('sessionToken');
-            if (token) {
-                fetch('/api/verify-session', {
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/admin/users', {
                     headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.valid) {
-                        showNotification('Session active, redirecting...', 'info');
-                        setTimeout(() => {
-                            window.location.href = '/';
-                        }, 1000);
+                        'Authorization': `Bearer ${sessionToken}`
                     }
                 });
+                const data = await response.json();
+                users = data.users || [];
+                renderUserList();
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showNotification('Failed to load users', 'error');
             }
-        });
+        }
         
-        // Enter key handling
-        document.getElementById('password').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+        function renderUserList() {
+            const userListEl = document.getElementById('userList');
+            
+            if (users.length === 0) {
+                userListEl.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: rgba(255,255,255,0.5);">
+                        <i class="fas fa-users" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <div>No users configured yet</div>
+                        <div style="font-size: 0.8rem; margin-top: 10px;">Click "Add User" to get started</div>
+                    </div>
+                `;
+                return;
             }
+            
+            userListEl.innerHTML = users.map(user => `
+                <div class="user-item ${currentUser?.email === user.email ? 'active' : ''}" 
+                     onclick="selectUser('${user.email}')" data-email="${user.email}">
+                    <div class="user-email">
+                        ${user.email}
+                        ${user.isAdmin ? 
+                            '<span class="user-type-badge badge-admin">Admin</span>' : ''}
+                        ${user.isInternal ? 
+                            '<span class="user-type-badge badge-internal">Internal</span>' : 
+                            '<span class="user-type-badge badge-external">External</span>'}
+                    </div>
+                    <div class="user-meta">
+                        <i class="fas fa-users"></i> ${user.teams ? user.teams.length : 0} teams
+                        · <i class="fas fa-tag"></i> ${user.accountType || 'Not set'}
+                        · <i class="fas fa-key"></i> ${user.userAttributes ? Object.keys(user.userAttributes).length : 0} attributes
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function filterUsers(searchTerm) {
+            const userItems = document.querySelectorAll('.user-item');
+            const term = searchTerm.toLowerCase();
+            
+            userItems.forEach(item => {
+                const email = item.dataset.email.toLowerCase();
+                if (email.includes(term)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        async function selectUser(email) {
+            const user = users.find(u => u.email === email);
+            if (!user) return;
+            
+            currentUser = user;
+            isNewUser = false;
+            renderUserList();
+            showUserConfig();
+        }
+        
+        function showAddUserForm() {
+            isNewUser = true;
+            currentUser = {
+                email: '',
+                isAdmin: false,
+                isInternal: false,
+                teams: [],
+                accountType: '',
+                userAttributes: {}
+            };
+            showUserConfig();
+        }
+        
+        function showUserConfig() {
+            const configContent = document.getElementById('configContent');
+            
+            if (!currentUser) {
+                configContent.innerHTML = `
+                    <div class="no-selection">
+                        <i class="fas fa-user-cog"></i>
+                        <h3>Select a user to configure</h3>
+                        <p style="margin-top: 10px;">Choose a user from the list to manage their configuration</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const cannotDeleteSuperAdmin = currentUser.email.toLowerCase() === 'tj@sigmacomputing.com';
+            
+            configContent.innerHTML = `
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <i class="fas fa-user-cog"></i> ${isNewUser ? 'Add New User' : 'Configure User'}
+                    </h2>
+                </div>
+                
+                <div class="form-section">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="userEmail" 
+                           value="${currentUser.email}" 
+                           ${!isNewUser ? 'readonly' : ''}
+                           placeholder="user@example.com">
+                </div>
+                
+                ${isNewUser ? `
+                <div class="form-section">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="userPassword" 
+                           placeholder="Minimum 8 characters" required>
+                    <div class="password-info">Password must be at least 8 characters long</div>
+                </div>
+                ` : `
+                <div class="password-section">
+                    <label class="form-label">Reset Password (optional)</label>
+                    <input type="password" class="form-input" id="userPassword" 
+                           placeholder="Enter new password (min 8 chars) or leave blank">
+                    <div class="password-info">Leave blank to keep current password</div>
+                </div>
+                `}
+                
+                <div class="admin-checkbox">
+                    <label>
+                        <input type="checkbox" id="isAdmin" ${currentUser.isAdmin ? 'checked' : ''} 
+                               ${cannotDeleteSuperAdmin ? 'disabled' : ''}>
+                        <i class="fas fa-crown"></i> Grant Admin Privileges
+                    </label>
+                </div>
+                
+                <div class="form-section">
+                    <label class="form-label">User Type</label>
+                    <select class="form-input" id="userType" onchange="toggleExternalFields()">
+                        <option value="external" ${!currentUser.isInternal ? 'selected' : ''}>External User</option>
+                        <option value="internal" ${currentUser.isInternal ? 'selected' : ''}>Internal User (Sigma Member)</option>
+                    </select>
+                    <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 5px;">
+                        Internal users use their Sigma account permissions. External users need configuration below.
+                    </small>
+                </div>
+                
+                <div id="externalUserFields" style="${currentUser.isInternal ? 'display: none;' : ''}">
+                    <div class="form-section">
+                        <label class="form-label">Teams (Multi-select)</label>
+                        <div class="multi-select" id="teamsSelect">
+                            ${sigmaTeams.length > 0 ? sigmaTeams.map(team => `
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="team_${team.id}" value="${team.name}"
+                                           ${currentUser.teams?.includes(team.name) ? 'checked' : ''}>
+                                    <label for="team_${team.id}">${team.name}</label>
+                                </div>
+                            `).join('') : '<div style="color: rgba(255,255,255,0.5); padding: 10px;">Loading teams...</div>'}
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <label class="form-label">Account Type</label>
+                        <select class="form-input" id="accountType">
+                            <option value="">Select account type...</option>
+                            ${sigmaAccountTypes.map(type => `
+                                <option value="${type.name}" ${currentUser.accountType === type.name ? 'selected' : ''}>
+                                    ${type.name}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="form-section">
+                        <label class="form-label">User Attributes</label>
+                        <div class="multi-select" id="attributesSelect">
+                            ${sigmaUserAttributes.length > 0 ? sigmaUserAttributes.map(attr => `
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="attr_${attr.id}" 
+                                           value="${attr.name}"
+                                           onchange="toggleAttributeValue('${attr.name}', this.checked)"
+                                           ${currentUser.userAttributes?.[attr.name] !== undefined ? 'checked' : ''}>
+                                    <label for="attr_${attr.id}">${attr.name}</label>
+                                </div>
+                                <div id="attrValue_${attr.name}" class="attribute-values" 
+                                     style="${currentUser.userAttributes?.[attr.name] !== undefined ? '' : 'display: none;'}">
+                                    <input type="text" class="attribute-value-input" 
+                                           placeholder="Enter value(s) for ${attr.name}"
+                                           value="${currentUser.userAttributes?.[attr.name] || ''}">
+                                </div>
+                            `).join('') : '<div style="color: rgba(255,255,255,0.5); padding: 10px;">Loading attributes...</div>'}
+                        </div>
+                        <small style="color: rgba(255,255,255,0.6); display: block; margin-top: 10px;">
+                            For multiple values, separate with commas (e.g., value1, value2)
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-save" onclick="saveUser()">
+                        <i class="fas fa-save"></i> ${isNewUser ? 'Create User' : 'Save Changes'}
+                    </button>
+                    ${!isNewUser && !cannotDeleteSuperAdmin ? `
+                        <button class="btn btn-delete" onclick="deleteUser()">
+                            <i class="fas fa-trash"></i> Delete User
+                        </button>
+                    ` : ''}
+                    <button class="btn btn-cancel" onclick="cancelEdit()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            `;
+        }
+        
+        function toggleExternalFields() {
+            const userType = document.getElementById('userType').value;
+            const externalFields = document.getElementById('externalUserFields');
+            
+            if (userType === 'internal') {
+                externalFields.style.display = 'none';
+            } else {
+                externalFields.style.display = 'block';
+            }
+        }
+        
+        function toggleAttributeValue(attrName, checked) {
+            const valueDiv = document.getElementById(`attrValue_${attrName}`);
+            if (valueDiv) {
+                valueDiv.style.display = checked ? 'block' : 'none';
+            }
+        }
+        
+        async function saveUser() {
+            const email = document.getElementById('userEmail').value.trim();
+            const password = document.getElementById('userPassword')?.value;
+            const isAdmin = document.getElementById('isAdmin').checked;
+            
+            if (!email) {
+                showNotification('Please enter an email address', 'error');
+                return;
+            }
+            
+            if (isNewUser && (!password || password.length < 8)) {
+                showNotification('Password must be at least 8 characters', 'error');
+                return;
+            }
+            
+            const userType = document.getElementById('userType').value;
+            const isInternal = userType === 'internal';
+            
+            let userData = {
+                email: email,
+                isAdmin: isAdmin,
+                isInternal: isInternal
+            };
+            
+            if (password) {
+                userData.password = password;
+            }
+            
+            if (!isInternal) {
+                // Get selected teams
+                const selectedTeams = [];
+                document.querySelectorAll('#teamsSelect input[type="checkbox"]:checked').forEach(checkbox => {
+                    selectedTeams.push(checkbox.value);
+                });
+                
+                // Get account type
+                const accountType = document.getElementById('accountType').value;
+                
+                // Get user attributes
+                const userAttributes = {};
+                sigmaUserAttributes.forEach(attr => {
+                    const checkbox = document.getElementById(`attr_${attr.id}`);
+                    if (checkbox && checkbox.checked) {
+                        const valueInput = document.querySelector(`#attrValue_${attr.name} input`);
+                        if (valueInput && valueInput.value) {
+                            userAttributes[attr.name] = valueInput.value;
+                        }
+                    }
+                });
+                
+                userData.teams = selectedTeams;
+                userData.accountType = accountType;
+                userData.userAttributes = userAttributes;
+            }
+            
+            try {
+                const url = isNewUser ? '/api/register' : `/api/admin/users/${encodeURIComponent(email)}`;
+                const method = isNewUser ? 'POST' : 'PUT';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionToken}`
+                    },
+                    body: JSON.stringify(userData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(`User ${isNewUser ? 'created' : 'updated'} successfully`, 'success');
+                    await loadUsers();
+                    if (isNewUser) {
+                        selectUser(email);
+                    }
+                } else {
+                    showNotification(data.error || 'Failed to save user', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving user:', error);
+                showNotification('Failed to save user configuration', 'error');
+            }
+        }
+        
+        async function deleteUser() {
+            if (!currentUser) return;
+            
+            if (currentUser.email.toLowerCase() === 'tj@sigmacomputing.com') {
+                showNotification('Cannot delete super admin account', 'error');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to delete the user ${currentUser.email}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/users/${encodeURIComponent(currentUser.email)}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${sessionToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('User deleted successfully', 'success');
+                    currentUser = null;
+                    await loadUsers();
+                    showUserConfig();
+                } else {
+                    showNotification(data.error || 'Failed to delete user', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showNotification('Failed to delete user', 'error');
+            }
+        }
+        
+        function cancelEdit() {
+            currentUser = null;
+            isNewUser = false;
+            renderUserList();
+            showUserConfig();
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthentication();
         });
     </script>
 </body>
