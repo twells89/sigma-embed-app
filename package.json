@@ -1,37 +1,29 @@
 {
-  "name": "sigma-embed-app",
-  "version": "1.0.0",
-  "description": "Sigma Computing Embed Application with Admin Panel",
+  "name": "plugs-electronics-dashboard",
+  "version": "2.0.0",
+  "description": "Plugs Electronics Dashboard with Authentication and Admin Panel",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "build": "npm rebuild sqlite3",
-    "postinstall": "npm rebuild sqlite3",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon server.js"
   },
   "keywords": [
     "sigma",
-    "embed",
-    "analytics",
-    "dashboard"
+    "dashboard",
+    "embedding",
+    "authentication"
   ],
-  "author": "TJ Wells",
+  "author": "TJ",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
-    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "axios": "^1.5.0",
     "jsonwebtoken": "^9.0.2",
     "sqlite3": "^5.1.6",
-    "dotenv": "^16.3.1",
-    "bcryptjs": "^2.4.3"
-    
+    "bcrypt": "^5.1.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
-  },
-  "engines": {
-    "node": "20.x",
-    "npm": ">=9.0.0"
   }
 }
