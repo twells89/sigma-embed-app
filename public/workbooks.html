@@ -13,7 +13,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue',
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', 
                          Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
             background: linear-gradient(135deg, #0c0c1d 0%, #1a1a2e 50%, #16213e 100%);
             color: #ffffff;
@@ -270,12 +270,6 @@
             padding: 10px;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .folder-header:hover {
-            background: rgba(0, 0, 0, 0.5);
         }
 
         .folder-header i {
@@ -553,72 +547,83 @@
     </div>
 
     <script>
-        let sessionToken = localStorage.getItem('sessionToken') || '';
-        let currentUserEmail = '';
+        const API_BASE_URL =
+          window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? ''
+            : 'https://sigma-embed-app.onrender.com';
+
         let allItems = [];
         let currentFilter = 'all';
-        let currentView = 'folder'; // Folder view by default
+        let currentView = 'grid';
+        let sessionToken = '';
 
         function checkAuthentication() {
-            const userEmail = localStorage.getItem('userEmail');
-            if (!userEmail) {
+            const token = localStorage.getItem('sessionToken');
+            if (!token) {
                 window.location.href = '/login';
                 return false;
             }
-            currentUserEmail = userEmail;
-
-            const emailSpan = document.getElementById('userEmail');
-            if (emailSpan) {
-                emailSpan.textContent = userEmail;
-            }
-
-            // Refresh token from localStorage in case it changed
-            sessionToken = localStorage.getItem('sessionToken') || '';
-
-            loadItems();
-            return true;
+            sessionToken = token;
+            
+            fetch(API_BASE_URL + '/api/verify-session', {
+                headers: {
+                    'Authorization': `Bearer ${sessionToken}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Session invalid');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.valid) {
+                    localStorage.clear();
+                    window.location.href = '/login';
+                } else {
+                    document.getElementById('userEmail').textContent = data.email;
+                    loadItems();
+                }
+            })
+            .catch(error => {
+                console.error('Session verification failed:', error);
+                localStorage.clear();
+                window.location.href = '/login';
+            });
         }
 
         async function loadItems() {
             try {
-                console.log('📚 Fetching workbooks and data models for:', currentUserEmail);
-
-                const response = await fetch(
-                    `/api/items?email=${encodeURIComponent(currentUserEmail)}`,
-                    {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${sessionToken}`,
-                            'Content-Type': 'application/json'
-                        }
+                const response = await fetch(API_BASE_URL + '/api/items', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${sessionToken}`,
+                        'Content-Type': 'application/json'
                     }
-                );
-
+                });
+                
                 if (response.status === 401) {
                     console.error('Authentication failed - redirecting to login');
                     localStorage.clear();
                     window.location.href = '/login';
                     return;
                 }
-
+                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
+                
                 const data = await response.json();
-
-                // Combine workbooks and data models
+                
                 allItems = [
                     ...(data.workbooks || []).map(wb => ({ ...wb, itemType: wb.itemType || 'workbook' })),
                     ...(data.dataModels || []).map(dm => ({ ...dm, itemType: dm.itemType || 'data-model' }))
                 ];
-
-                // Sort alphabetically
-                allItems.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
+                
+                allItems.sort((a, b) => a.name.localeCompare(b.name));
+                
                 updateStats();
                 renderItems();
-
             } catch (error) {
                 console.error('Error loading items:', error);
                 showError();
@@ -637,20 +642,20 @@
         function renderItems() {
             const container = document.getElementById('workbooksContainer');
             const searchTerm = document.getElementById('searchBox').value.toLowerCase();
-
+            
             let filteredItems = allItems;
-
+            
             if (currentFilter !== 'all') {
                 filteredItems = filteredItems.filter(item => item.itemType === currentFilter);
             }
-
+            
             if (searchTerm) {
-                filteredItems = filteredItems.filter(item =>
-                    (item.name && item.name.toLowerCase().includes(searchTerm)) ||
+                filteredItems = filteredItems.filter(item => 
+                    item.name.toLowerCase().includes(searchTerm) ||
                     (item.path && item.path.toLowerCase().includes(searchTerm))
                 );
             }
-
+            
             if (filteredItems.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
@@ -673,46 +678,38 @@
 
         function renderGridView(container, items) {
             container.className = 'workbooks-container';
-            container.innerHTML = items.map(item => {
-                const isDataModel = item.itemType === 'data-model';
-                const urlId = isDataModel
-                    ? (item.dataModelUrlId || item.dataModelId)
-                    : (item.workbookUrlId || item.workbookId);
-
-                return `
-                    <div class="workbook-card" onclick="openItem('${item.itemType}', '${urlId}')">
-                        <div class="workbook-header">
-                            <div class="workbook-icon">
-                                <i class="fas fa-${isDataModel ? 'database' : 'book'}"></i>
-                            </div>
-                            <span class="workbook-type ${isDataModel ? 'data-model' : ''}">
-                                ${isDataModel ? 'DATA MODEL' : 'WORKBOOK'}
-                            </span>
+            container.innerHTML = items.map(item => `
+                <div class="workbook-card" onclick="openItem('${item.itemType}', '${
+                    item.itemType === 'data-model' ? 
+                    (item.dataModelUrlId || item.dataModelId) : 
+                    (item.workbookUrlId || item.workbookId)
+                }')">
+                    <div class="workbook-header">
+                        <div class="workbook-icon">
+                            <i class="fas fa-${item.itemType === 'data-model' ? 'database' : 'book'}"></i>
                         </div>
-                        <div class="workbook-name">${escapeHtml(item.name || '')}</div>
-                        <div class="workbook-path">
-                            <i class="fas fa-folder"></i>
-                            ${escapeHtml(item.path || '/')}
-                        </div>
-                        <div class="workbook-meta">
-                            <div class="meta-item">
-                                <i class="fas fa-calendar"></i>
-                                ${formatDate(item.updatedAt)}
-                            </div>
-                            ${item.badge ? `
-                            <div class="meta-item">
-                                <i class="fas fa-star"></i>
-                                ${item.badge}
-                            </div>` : ''}
+                        <span class="workbook-type ${item.itemType === 'data-model' ? 'data-model' : ''}">
+                            ${item.itemType === 'data-model' ? 'DATA MODEL' : 'WORKBOOK'}
+                        </span>
+                    </div>
+                    <div class="workbook-name">${escapeHtml(item.name)}</div>
+                    <div class="workbook-path">
+                        <i class="fas fa-folder"></i>
+                        ${escapeHtml(item.path || '/')}
+                    </div>
+                    <div class="workbook-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            ${formatDate(item.updatedAt)}
                         </div>
                     </div>
-                `;
-            }).join('');
+                </div>
+            `).join('');
         }
 
         function renderFolderView(container, items) {
             container.className = 'workbooks-container';
-
+            
             const folders = {};
             items.forEach(item => {
                 const path = item.path || '/';
@@ -733,32 +730,29 @@
                             <span class="folder-count">${folderItems.length} items</span>
                         </div>
                         <div class="workbooks-container">
-                            ${folderItems.map(item => {
-                                const isDataModel = item.itemType === 'data-model';
-                                const urlId = isDataModel
-                                    ? (item.dataModelUrlId || item.dataModelId)
-                                    : (item.workbookUrlId || item.workbookId);
-
-                                return `
-                                    <div class="workbook-card" onclick="openItem('${item.itemType}', '${urlId}')">
-                                        <div class="workbook-header">
-                                            <div class="workbook-icon">
-                                                <i class="fas fa-${isDataModel ? 'database' : 'book'}"></i>
-                                            </div>
-                                            <span class="workbook-type ${isDataModel ? 'data-model' : ''}">
-                                                ${isDataModel ? 'DATA MODEL' : 'WORKBOOK'}
-                                            </span>
+                            ${folderItems.map(item => `
+                                <div class="workbook-card" onclick="openItem('${item.itemType}', '${
+                                    item.itemType === 'data-model' ? 
+                                    (item.dataModelUrlId || item.dataModelId) : 
+                                    (item.workbookUrlId || item.workbookId)
+                                }')">
+                                    <div class="workbook-header">
+                                        <div class="workbook-icon">
+                                            <i class="fas fa-${item.itemType === 'data-model' ? 'database' : 'book'}"></i>
                                         </div>
-                                        <div class="workbook-name">${escapeHtml(item.name || '')}</div>
-                                        <div class="workbook-meta">
-                                            <div class="meta-item">
-                                                <i class="fas fa-calendar"></i>
-                                                ${formatDate(item.updatedAt)}
-                                            </div>
+                                        <span class="workbook-type ${item.itemType === 'data-model' ? 'data-model' : ''}">
+                                            ${item.itemType === 'data-model' ? 'DATA MODEL' : 'WORKBOOK'}
+                                        </span>
+                                    </div>
+                                    <div class="workbook-name">${escapeHtml(item.name)}</div>
+                                    <div class="workbook-meta">
+                                        <div class="meta-item">
+                                            <i class="fas fa-calendar"></i>
+                                            ${formatDate(item.updatedAt)}
                                         </div>
                                     </div>
-                                `;
-                            }).join('')}
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 `;
@@ -793,54 +787,19 @@
                 alert('Unable to open item - missing URL ID');
                 return;
             }
-
-            const isDataModel = itemType === 'data-model';
-
-            // Find the full item so we can store ID/name in localStorage
-            const item = allItems.find(i => {
-                if (i.itemType !== itemType) return false;
-                if (isDataModel) {
-                    return i.dataModelUrlId === urlId || i.dataModelId === urlId;
-                } else {
-                    return i.workbookUrlId === urlId || i.workbookId === urlId;
-                }
-            });
-
-            let itemId = '';
-            let itemName = '';
-
-            if (item) {
-                itemId = isDataModel ? (item.dataModelId || '') : (item.workbookId || '');
-                itemName = item.name || '';
-
-                if (isDataModel) {
-                    localStorage.setItem('selectedDataModelId', itemId);
-                    localStorage.setItem('selectedDataModelUrlId', urlId);
-                    localStorage.setItem('selectedDataModelName', itemName);
-                    localStorage.setItem('selectedItemType', 'data-model');
-                } else {
-                    localStorage.setItem('selectedWorkbookId', itemId);
-                    localStorage.setItem('selectedWorkbookUrlId', urlId);
-                    localStorage.setItem('selectedWorkbookName', itemName);
-                    localStorage.setItem('selectedItemType', 'workbook');
-                }
-            }
-
+            
             const params = new URLSearchParams();
-            params.append('itemType', isDataModel ? 'data-model' : 'workbook');
-
-            if (isDataModel) {
-                if (itemId) params.append('dataModelId', itemId);
+            
+            if (itemType === 'data-model') {
                 params.append('dataModelUrlId', urlId);
-                if (itemName) params.append('itemName', itemName);
+                params.append('itemType', 'data-model');
             } else {
-                if (itemId) params.append('workbookId', itemId);
                 params.append('workbookUrlId', urlId);
-                if (itemName) params.append('workbookName', itemName);
+                params.append('itemType', 'workbook');
             }
-
-            // Redirect to /index.html so the iframe dashboard loads
-            window.location.href = `/index.html?${params.toString()}`;
+            
+            // Redirect to main dashboard with parameters (matches local behavior)
+            window.location.href = `/?${params.toString()}`;
         }
 
         function showError() {
@@ -868,7 +827,6 @@
         }
 
         function logout() {
-            // Clear auth + selection
             localStorage.removeItem('userEmail');
             localStorage.removeItem('sessionToken');
             localStorage.removeItem('selectedWorkbookId');
