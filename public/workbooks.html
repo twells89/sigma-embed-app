@@ -573,31 +573,49 @@
             return true;
         }
 
-        async function loadItems() {
-            try {
-                console.log('📚 Fetching workbooks and data models for:', currentUserEmail);
+async function loadItems() {
+    try {
+        console.log('📚 Fetching workbooks and data models for:', currentUserEmail);
 
-                const response = await fetch(`/api/items?email=${encodeURIComponent(currentUserEmail)}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch items');
-                }
-
-                const data = await response.json();
-                allItems = [
-                    ...(data.workbooks || []).map(wb => ({ ...wb, itemType: wb.itemType || 'workbook' })),
-                    ...(data.dataModels || []).map(dm => ({ ...dm, itemType: dm.itemType || 'data-model' }))
-                ];
-
-                // Sort by name for consistency
-                allItems.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
-                updateStats();
-                renderItems();
-            } catch (error) {
-                console.error('Error loading items:', error);
-                showError();
+        // MUST pass both: email + Authorization token
+        const response = await fetch(`/api/items?email=${encodeURIComponent(currentUserEmail)}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`,
+                'Content-Type': 'application/json'
             }
+        });
+
+        if (response.status === 401) {
+            console.error('Authentication failed - redirecting to login');
+            localStorage.clear();
+            window.location.href = '/login';
+            return;
         }
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Combine workbooks and data models
+        allItems = [
+            ...(data.workbooks || []).map(wb => ({ ...wb, itemType: wb.itemType || 'workbook' })),
+            ...(data.dataModels || []).map(dm => ({ ...dm, itemType: dm.itemType || 'data-model' }))
+        ];
+
+        // Sort alphabetically
+        allItems.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+        updateStats();
+        renderItems();
+
+    } catch (error) {
+        console.error('Error loading items:', error);
+        showError();
+    }
+}
 
         function updateStats() {
             const workbooks = allItems.filter(item => item.itemType === 'workbook');
