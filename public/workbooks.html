@@ -594,16 +594,24 @@
 
         async function loadItems() {
             try {
+                // Don't include email in URL - authentication is handled by the token
                 const response = await fetch('/api/items', {
+                    method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${sessionToken}`
+                        'Authorization': `Bearer ${sessionToken}`,
+                        'Content-Type': 'application/json'
                     }
                 });
                 
                 if (response.status === 401) {
+                    console.error('Authentication failed - redirecting to login');
                     localStorage.clear();
                     window.location.href = '/login';
                     return;
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 const data = await response.json();
