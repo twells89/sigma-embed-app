@@ -217,49 +217,35 @@
             color: #28a745;
         }
         
-        .demo-users {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(0, 255, 255, 0.2);
+        .notification.info {
+            background: linear-gradient(135deg, rgba(0, 123, 255, 0.2), rgba(0, 255, 255, 0.2));
+            border: 1px solid rgba(0, 123, 255, 0.5);
+            color: #00ffff;
         }
         
-        .demo-title {
+        .password-requirements {
+            margin-top: 10px;
             font-size: 0.8rem;
-            color: #00ffff;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: left;
         }
         
-        .demo-user {
+        .password-requirements ul {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 5px;
+        }
+        
+        .password-requirements li {
+            margin-bottom: 3px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 8px 12px;
-            background: rgba(0, 255, 255, 0.05);
-            border: 1px solid rgba(0, 255, 255, 0.1);
-            border-radius: 6px;
-            margin-bottom: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 0.85rem;
+            gap: 5px;
         }
         
-        .demo-user:hover {
-            background: rgba(0, 255, 255, 0.1);
-            border-color: rgba(0, 255, 255, 0.3);
-        }
-        
-        .demo-email {
-            color: #ffffff;
-        }
-        
-        .demo-type {
+        .password-requirements i {
+            font-size: 0.7rem;
             color: #00ffff;
-            font-size: 0.75rem;
-            font-weight: 600;
         }
         
         @media (max-width: 768px) {
@@ -286,7 +272,7 @@
         <div class="logo">
             <i class="fas fa-bolt"></i>
             <h1 class="company-name">Plugs Electronics</h1>
-            <p class="tagline">Command Center Access</p>
+            <p class="tagline">Secure Access Portal</p>
         </div>
         
         <form class="login-form" id="loginForm">
@@ -298,6 +284,7 @@
                     class="form-input" 
                     placeholder="Enter your email address"
                     required
+                    autocomplete="username"
                 >
             </div>
             
@@ -307,9 +294,16 @@
                     type="password" 
                     id="password" 
                     class="form-input" 
-                    placeholder="Enter any password"
+                    placeholder="Enter your password"
                     required
+                    autocomplete="current-password"
                 >
+                <div class="password-requirements">
+                    <ul>
+                        <li><i class="fas fa-lock"></i> Passwords are case-sensitive</li>
+                        <li><i class="fas fa-shield-alt"></i> Secure authentication required</li>
+                    </ul>
+                </div>
             </div>
             
             <button type="submit" class="login-btn" id="loginBtn">
@@ -318,22 +312,6 @@
             
             <div class="notification" id="notification"></div>
         </form>
-        
-        <div class="demo-users">
-            <div class="demo-title">Quick Test Users</div>
-            <div class="demo-user" onclick="fillUser('tj+1@sigmacomputing.com')">
-                <span class="demo-email">tj+1@sigmacomputing.com</span>
-                <span class="demo-type">Internal</span>
-            </div>
-            <div class="demo-user" onclick="fillUser('external@company.com')">
-                <span class="demo-email">external@company.com</span>
-                <span class="demo-type">External</span>
-            </div>
-            <div class="demo-user" onclick="fillUser('test.user@plugselectronics.com')">
-                <span class="demo-email">test.user@plugselectronics.com</span>
-                <span class="demo-type">External</span>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -362,11 +340,6 @@
             setTimeout(function() {
                 notification.classList.remove('show');
             }, 5000);
-        }
-        
-        function fillUser(email) {
-            document.getElementById('email').value = email;
-            document.getElementById('password').value = 'demo';
         }
         
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -403,8 +376,17 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    // Store session token and user info
+                    localStorage.setItem('sessionToken', data.token);
                     localStorage.setItem('userEmail', data.email);
-                    showNotification('Authentication successful! Redirecting...', 'success');
+                    localStorage.setItem('isAdmin', data.isAdmin);
+                    
+                    if (data.isAdmin) {
+                        showNotification('Admin authentication successful! Redirecting...', 'success');
+                    } else {
+                        showNotification('Authentication successful! Redirecting...', 'success');
+                    }
+                    
                     setTimeout(() => {
                         window.location.href = '/';
                     }, 1500);
@@ -426,6 +408,25 @@
         document.addEventListener('DOMContentLoaded', function() {
             createParticles();
             document.getElementById('email').focus();
+            
+            // Check if already logged in
+            const token = localStorage.getItem('sessionToken');
+            if (token) {
+                fetch('/api/verify-session', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.valid) {
+                        showNotification('Session active, redirecting...', 'info');
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 1000);
+                    }
+                });
+            }
         });
         
         // Enter key handling
