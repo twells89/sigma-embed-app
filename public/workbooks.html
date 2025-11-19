@@ -573,7 +573,7 @@ let currentView = 'grid';
             loadItems();
             return true;
         }
-
+let sessionToken = localStorage.getItem('sessionToken') || '';
 async function loadItems() {
     try {
         console.log('📚 Fetching workbooks and data models for:', currentUserEmail);
