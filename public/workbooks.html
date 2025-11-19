@@ -553,10 +553,11 @@
     </div>
 
     <script>
-        let currentUserEmail = '';
-        let allItems = [];
-        let currentFilter = 'all';
-        let currentView = 'grid';
+let sessionToken = localStorage.getItem('sessionToken') || '';
+let currentUserEmail = '';
+let allItems = [];
+let currentFilter = 'all';
+let currentView = 'grid';
 
         function checkAuthentication() {
             const userEmail = localStorage.getItem('userEmail');
