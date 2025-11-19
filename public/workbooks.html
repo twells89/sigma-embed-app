@@ -13,7 +13,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue',
                          Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
             background: linear-gradient(135deg, #0c0c1d 0%, #1a1a2e 50%, #16213e 100%);
             color: #ffffff;
@@ -499,7 +499,7 @@
 
     <div class="container">
         <div class="search-container">
-            <input type="text" class="search-box" id="searchBox" 
+            <input type="text" class="search-box" id="searchBox"
                    placeholder="Search workbooks and data models by name or path...">
         </div>
 
@@ -534,11 +534,11 @@
         </div>
 
         <div class="view-toggle">
-            <button class="view-btn" id="folderViewBtn" onclick="toggleView('folder')">
+            <button class="view-btn active" id="folderViewBtn" onclick="toggleView('folder')">
                 <i class="fas fa-folder"></i>
                 Folder View
             </button>
-            <button class="view-btn active" id="gridViewBtn" onclick="toggleView('grid')">
+            <button class="view-btn" id="gridViewBtn" onclick="toggleView('grid')">
                 <i class="fas fa-th"></i>
                 Grid View
             </button>
@@ -553,11 +553,11 @@
     </div>
 
     <script>
-let sessionToken = localStorage.getItem('sessionToken') || '';
-let currentUserEmail = '';
-let allItems = [];
-let currentFilter = 'all';
-let currentView = 'grid';
+        let sessionToken = localStorage.getItem('sessionToken') || '';
+        let currentUserEmail = '';
+        let allItems = [];
+        let currentFilter = 'all';
+        let currentView = 'folder'; // Folder view by default
 
         function checkAuthentication() {
             const userEmail = localStorage.getItem('userEmail');
@@ -566,57 +566,64 @@ let currentView = 'grid';
                 return false;
             }
             currentUserEmail = userEmail;
+
             const emailSpan = document.getElementById('userEmail');
             if (emailSpan) {
                 emailSpan.textContent = userEmail;
             }
+
+            // Refresh token from localStorage in case it changed
+            sessionToken = localStorage.getItem('sessionToken') || '';
+
             loadItems();
             return true;
         }
-let sessionToken = localStorage.getItem('sessionToken') || '';
-async function loadItems() {
-    try {
-        console.log('📚 Fetching workbooks and data models for:', currentUserEmail);
 
-        // MUST pass both: email + Authorization token
-        const response = await fetch(`/api/items?email=${encodeURIComponent(currentUserEmail)}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${sessionToken}`,
-                'Content-Type': 'application/json'
+        async function loadItems() {
+            try {
+                console.log('📚 Fetching workbooks and data models for:', currentUserEmail);
+
+                const response = await fetch(
+                    `/api/items?email=${encodeURIComponent(currentUserEmail)}`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${sessionToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+
+                if (response.status === 401) {
+                    console.error('Authentication failed - redirecting to login');
+                    localStorage.clear();
+                    window.location.href = '/login';
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Combine workbooks and data models
+                allItems = [
+                    ...(data.workbooks || []).map(wb => ({ ...wb, itemType: wb.itemType || 'workbook' })),
+                    ...(data.dataModels || []).map(dm => ({ ...dm, itemType: dm.itemType || 'data-model' }))
+                ];
+
+                // Sort alphabetically
+                allItems.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+                updateStats();
+                renderItems();
+
+            } catch (error) {
+                console.error('Error loading items:', error);
+                showError();
             }
-        });
-
-        if (response.status === 401) {
-            console.error('Authentication failed - redirecting to login');
-            localStorage.clear();
-            window.location.href = '/login';
-            return;
         }
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        // Combine workbooks and data models
-        allItems = [
-            ...(data.workbooks || []).map(wb => ({ ...wb, itemType: wb.itemType || 'workbook' })),
-            ...(data.dataModels || []).map(dm => ({ ...dm, itemType: dm.itemType || 'data-model' }))
-        ];
-
-        // Sort alphabetically
-        allItems.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
-        updateStats();
-        renderItems();
-
-    } catch (error) {
-        console.error('Error loading items:', error);
-        showError();
-    }
-}
 
         function updateStats() {
             const workbooks = allItems.filter(item => item.itemType === 'workbook');
@@ -832,7 +839,7 @@ async function loadItems() {
                 if (itemName) params.append('workbookName', itemName);
             }
 
-            // IMPORTANT: redirect to /index.html so the iframe dashboard loads
+            // Redirect to /index.html so the iframe dashboard loads
             window.location.href = `/index.html?${params.toString()}`;
         }
 
@@ -861,15 +868,21 @@ async function loadItems() {
         }
 
         function logout() {
-            // Simple logout using email-based auth
+            // Clear auth + selection
             localStorage.removeItem('userEmail');
+            localStorage.removeItem('sessionToken');
+            localStorage.removeItem('selectedWorkbookId');
+            localStorage.removeItem('selectedWorkbookUrlId');
+            localStorage.removeItem('selectedWorkbookName');
+            localStorage.removeItem('selectedDataModelId');
+            localStorage.removeItem('selectedDataModelUrlId');
+            localStorage.removeItem('selectedDataModelName');
+            localStorage.removeItem('selectedItemType');
             window.location.href = '/login';
         }
 
-        // Search functionality
         document.getElementById('searchBox').addEventListener('input', renderItems);
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             checkAuthentication();
         });
