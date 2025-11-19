@@ -1360,7 +1360,7 @@ async function generateSignedUrlV2(itemUrlId, email = 'demo@plugselectronics.com
   }
 }
 
-// Authentication endpoints
+// Authentication endpoints (NO authentication required for login!)
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   
