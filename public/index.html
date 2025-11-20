@@ -833,31 +833,82 @@
         let currentWorkbookId = '';
         let currentWorkbookUrlId = '';
         let currentWorkbookName = '';
-        let currentItemType = 'workbook'; // New: track whether it's a workbook or data-model
+        let currentItemType = 'workbook';
         let embedLoaded = false;
         let currentBookmarkId = null;
         let currentExploreKey = '';
         let userTeams = [];
 
+        // FIXED: Authentication check that verifies both email and JWT token
         function checkAuthentication() {
             const userEmail = localStorage.getItem('userEmail');
-            if (!userEmail) {
+            const authToken = localStorage.getItem('authToken');
+            
+            if (!userEmail || !authToken) {
+                console.log('❌ No authentication found, redirecting to login...');
                 window.location.href = '/login';
                 return false;
             }
+            
             currentUserEmail = userEmail;
             document.getElementById('userEmail').textContent = userEmail;
+            console.log('✅ Authenticated as:', userEmail);
             return true;
+        }
+        
+        // FIXED: Helper function to get auth headers for all API requests
+        function getAuthHeaders() {
+            const authToken = localStorage.getItem('authToken');
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            };
+        }
+        
+        // FIXED: Helper for GET requests with authentication
+        async function authenticatedFetch(url, options = {}) {
+            const authToken = localStorage.getItem('authToken');
+            
+            if (!authToken) {
+                console.error('❌ No auth token found');
+                window.location.href = '/login';
+                throw new Error('Not authenticated');
+            }
+            
+            // Merge auth headers with any provided headers
+            const headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${authToken}`
+            };
+            
+            // If there's a body, ensure Content-Type is set
+            if (options.body && !headers['Content-Type']) {
+                headers['Content-Type'] = 'application/json';
+            }
+            
+            const response = await fetch(url, {
+                ...options,
+                headers
+            });
+            
+            // Check if token expired or invalid
+            if (response.status === 401 || response.status === 403) {
+                console.error('❌ Authentication failed - token invalid or expired');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userEmail');
+                window.location.href = '/login';
+                throw new Error('Authentication failed');
+            }
+            
+            return response;
         }
         
         function getWorkbookFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
             
-            // Determine item type
             const itemType = urlParams.get('itemType') || 
                            (urlParams.get('dataModelId') ? 'data-model' : 'workbook');
             
-            // Get the appropriate IDs based on item type
             const itemId = urlParams.get('dataModelId') || urlParams.get('workbookId');
             const itemUrlId = urlParams.get('dataModelUrlId') || urlParams.get('workbookUrlId');
             const itemName = urlParams.get('itemName') || urlParams.get('dataModelName') || urlParams.get('workbookName');
@@ -870,7 +921,6 @@
                            localStorage.getItem(itemType === 'data-model' ? 'selectedDataModelName' : 'selectedWorkbookName') || 
                            `Selected ${itemType === 'data-model' ? 'Data Model' : 'Workbook'}`;
                 
-                // Store based on item type
                 if (itemType === 'data-model') {
                     localStorage.setItem('selectedDataModelId', itemId);
                     localStorage.setItem('selectedDataModelUrlId', urlId);
@@ -891,7 +941,6 @@
                 };
             }
             
-            // Check localStorage for stored item
             const storedItemType = localStorage.getItem('selectedItemType') || 'workbook';
             const storedId = localStorage.getItem(storedItemType === 'data-model' ? 'selectedDataModelId' : 'selectedWorkbookId');
             const storedUrlId = localStorage.getItem(storedItemType === 'data-model' ? 'selectedDataModelUrlId' : 'selectedWorkbookUrlId');
@@ -911,8 +960,8 @@
         }
 
         function logout() {
-            // Clear all stored items
             localStorage.removeItem('userEmail');
+            localStorage.removeItem('authToken');
             localStorage.removeItem('selectedWorkbookId');
             localStorage.removeItem('selectedWorkbookUrlId');
             localStorage.removeItem('selectedWorkbookName');
@@ -952,9 +1001,10 @@
             }
         }
         
+        // FIXED: Use authenticated fetch
         async function fetchUserTeams() {
             try {
-                const response = await fetch(`/api/user/teams?email=${encodeURIComponent(currentUserEmail)}`);
+                const response = await authenticatedFetch(`/api/user/teams?email=${encodeURIComponent(currentUserEmail)}`);
                 const data = await response.json();
                 userTeams = data.teams || [];
                 console.log('👥 User teams:', userTeams);
@@ -1010,6 +1060,7 @@
             updateTeamSelector();
         }
 
+        // FIXED: Use authenticated fetch
         async function createBookmark() {
             const bookmarkName = document.getElementById('bookmarkName').value.trim();
             const shareType = document.querySelector('input[name="shareType"]:checked').value;
@@ -1037,11 +1088,8 @@
                 console.log('Creating bookmark with explore key:', currentExploreKey);
                 showNotification('✅ Creating bookmark...', 'success');
                 
-                const response = await fetch('/api/bookmarks', {
+                const response = await authenticatedFetch('/api/bookmarks', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify({
                         name: bookmarkName,
                         userEmail: currentUserEmail,
@@ -1080,11 +1128,12 @@
             }
         }
 
+        // FIXED: Use authenticated fetch
         async function loadBookmarks() {
             try {
                 const url = `/api/bookmarks?email=${encodeURIComponent(currentUserEmail)}&workbookId=${currentWorkbookId}`;
                 
-                const response = await fetch(url);
+                const response = await authenticatedFetch(url);
                 const data = await response.json();
                 
                 const bookmarksList = document.getElementById('bookmarksList');
@@ -1159,15 +1208,13 @@
             }
         }
 
+        // FIXED: Use authenticated fetch for all remaining bookmark functions
         async function syncBookmarks() {
             try {
                 showNotification('🔄 Syncing bookmarks from Sigma...', 'success');
                 
-                const response = await fetch('/api/bookmarks/sync', {
+                const response = await authenticatedFetch('/api/bookmarks/sync', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify({
                         email: currentUserEmail,
                         workbookId: currentWorkbookId
@@ -1184,7 +1231,6 @@
                     
                     const summary = parts.length > 0 ? parts.join(', ') : 'All bookmarks already synced';
                     showNotification(`✅ Sync complete! ${summary}`, 'success');
-                    // Reload the bookmarks list to show the synced bookmarks
                     await loadBookmarks();
                 } else {
                     showNotification('❌ Sync failed: ' + (data.error || 'Unknown error'), 'error');
@@ -1199,11 +1245,8 @@
             try {
                 showNotification('Loading bookmark...', 'success');
                 
-                const response = await fetch(`/api/bookmarks/load/${bookmarkId}`, {
+                const response = await authenticatedFetch(`/api/bookmarks/load/${bookmarkId}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify({
                         userEmail: currentUserEmail,
                         workbookId: currentWorkbookId
@@ -1236,7 +1279,7 @@
             try {
                 showNotification('Deleting bookmark...', 'success');
                 
-                const response = await fetch(`/api/bookmarks/${bookmarkId}?userEmail=${encodeURIComponent(currentUserEmail)}&workbookId=${currentWorkbookId}`, {
+                const response = await authenticatedFetch(`/api/bookmarks/${bookmarkId}?userEmail=${encodeURIComponent(currentUserEmail)}&workbookId=${currentWorkbookId}`, {
                     method: 'DELETE'
                 });
                 
@@ -1267,7 +1310,7 @@
             const newName = prompt('Enter new bookmark name:', currentName);
             
             if (!newName) {
-                return; // User cancelled
+                return;
             }
             
             if (newName === currentName) {
@@ -1278,11 +1321,8 @@
             try {
                 showNotification('Updating bookmark...', 'success');
                 
-                const response = await fetch(`/api/bookmarks/${bookmarkId}`, {
+                const response = await authenticatedFetch(`/api/bookmarks/${bookmarkId}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify({
                         name: newName,
                         userEmail: currentUserEmail,
@@ -1295,7 +1335,7 @@
                 
                 if (data.success) {
                     showNotification('Bookmark updated successfully!', 'success');
-                    loadBookmarks(); // Reload the list to show the new name
+                    loadBookmarks();
                 } else {
                     showNotification('Failed to update bookmark: ' + (data.error || 'Unknown error'), 'error');
                 }
@@ -1323,16 +1363,13 @@
             try {
                 showNotification('Updating bookmark view...', 'success');
                 
-                const response = await fetch(`/api/bookmarks/${bookmarkId}`, {
+                const response = await authenticatedFetch(`/api/bookmarks/${bookmarkId}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify({
                         name: currentName,
                         userEmail: currentUserEmail,
                         workbookId: currentWorkbookId,
-                        exploreKey: currentExploreKey // Use current explore key from embed
+                        exploreKey: currentExploreKey
                     })
                 });
                 
@@ -1340,7 +1377,7 @@
                 
                 if (data.success) {
                     showNotification('Bookmark view updated successfully!', 'success');
-                    loadBookmarks(); // Reload the list
+                    loadBookmarks();
                 } else {
                     showNotification('Failed to update bookmark: ' + (data.error || 'Unknown error'), 'error');
                 }
@@ -1358,7 +1395,7 @@
             try {
                 showNotification('Removing access...', 'success');
                 
-                const response = await fetch(`/api/bookmarks/${bookmarkId}?userEmail=${encodeURIComponent(currentUserEmail)}&workbookId=${currentWorkbookId}`, {
+                const response = await authenticatedFetch(`/api/bookmarks/${bookmarkId}?userEmail=${encodeURIComponent(currentUserEmail)}&workbookId=${currentWorkbookId}`, {
                     method: 'DELETE'
                 });
                 
@@ -1381,7 +1418,7 @@
             }
         }
         
-        // Scheduler Functions
+        // Scheduler Functions - FIXED with authenticated fetch
         async function openSchedulerModal() {
             document.getElementById('schedulerModal').classList.add('show');
             await loadBookmarksForScheduler();
@@ -1397,7 +1434,7 @@
         
         async function loadBookmarksForScheduler() {
             try {
-                const response = await fetch(`/api/bookmarks?email=${encodeURIComponent(currentUserEmail)}&workbookId=${currentWorkbookId}`);
+                const response = await authenticatedFetch(`/api/bookmarks?email=${encodeURIComponent(currentUserEmail)}&workbookId=${currentWorkbookId}`);
                 const data = await response.json();
                 
                 const bookmarkSelect = document.getElementById('scheduleBookmark');
@@ -1448,10 +1485,10 @@
                         cronExpression = `${minute} ${hour} * * *`;
                         break;
                     case 'weekly':
-                        cronExpression = `${minute} ${hour} * * 1`; // Every Monday
+                        cronExpression = `${minute} ${hour} * * 1`;
                         break;
                     case 'monthly':
-                        cronExpression = `${minute} ${hour} 1 * *`; // First day of month
+                        cronExpression = `${minute} ${hour} 1 * *`;
                         break;
                 }
                 
@@ -1471,7 +1508,6 @@
                 return;
             }
             
-            // Prepare destination config based on type
             let destinationConfig = {};
             
             if (destinationType === 'email') {
@@ -1480,7 +1516,6 @@
                     showNotification('Please enter at least one recipient email', 'error');
                     return;
                 }
-                // Parse recipients into array
                 const recipientList = recipients.split(',').map(email => email.trim()).filter(email => email);
                 if (recipientList.length === 0) {
                     showNotification('Please enter at least one valid recipient email', 'error');
@@ -1493,7 +1528,6 @@
                     showNotification('Please enter a Google Drive folder URL', 'error');
                     return;
                 }
-                // Basic validation for Google Drive URL
                 if (!googleDriveUrl.includes('drive.google.com')) {
                     showNotification('Please enter a valid Google Drive folder URL', 'error');
                     return;
@@ -1510,11 +1544,8 @@
             try {
                 showNotification('Creating schedule...', 'success');
                 
-                const response = await fetch(`/api/bookmarks/${bookmarkId}/schedule`, {
+                const response = await authenticatedFetch(`/api/bookmarks/${bookmarkId}/schedule`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify({
                         scheduleName: scheduleName,
                         cronExpression: cronExpression,
@@ -1547,7 +1578,7 @@
         
         async function loadSchedules() {
             try {
-                const response = await fetch(`/api/scheduled-reports?email=${encodeURIComponent(currentUserEmail)}`);
+                const response = await authenticatedFetch(`/api/scheduled-reports?email=${encodeURIComponent(currentUserEmail)}`);
                 const data = await response.json();
                 
                 const schedulesList = document.getElementById('schedulesList');
@@ -1556,14 +1587,12 @@
                     const schedulesHTML = data.schedules.map(schedule => {
                         const isActive = schedule.is_active === 1;
                         
-                        // Format destination display based on type
                         let destinationDisplay = '';
                         if (schedule.destination_type === 'email') {
                             const recipients = schedule.destination_config.recipients || [];
                             destinationDisplay = `<i class="fas fa-envelope"></i> ${recipients.join(', ')}`;
                         } else if (schedule.destination_type === 'googleDrive') {
                             const driveUrl = schedule.destination_config.googleDriveFolderUrl || '';
-                            // Extract folder name from URL if possible, or show truncated URL
                             const folderName = driveUrl.split('/').pop() || 'Google Drive Folder';
                             destinationDisplay = `<i class="fab fa-google-drive"></i> <a href="${driveUrl}" target="_blank" style="color: inherit; text-decoration: underline;">${folderName.length > 30 ? folderName.substring(0, 30) + '...' : folderName}</a>`;
                         }
@@ -1616,11 +1645,8 @@
             try {
                 showNotification(activate ? 'Resuming schedule...' : 'Pausing schedule...', 'success');
                 
-                const response = await fetch(`/api/scheduled-reports/${scheduleId}`, {
+                const response = await authenticatedFetch(`/api/scheduled-reports/${scheduleId}`, {
                     method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify({
                         userEmail: currentUserEmail,
                         isActive: activate
@@ -1649,7 +1675,7 @@
             try {
                 showNotification('Deleting schedule...', 'success');
                 
-                const response = await fetch(`/api/scheduled-reports/${scheduleId}?userEmail=${encodeURIComponent(currentUserEmail)}`, {
+                const response = await authenticatedFetch(`/api/scheduled-reports/${scheduleId}?userEmail=${encodeURIComponent(currentUserEmail)}`, {
                     method: 'DELETE'
                 });
                 
@@ -1723,6 +1749,7 @@
             }
         });
         
+        // FIXED: Use authenticated fetch for loadEmbed
         function loadEmbed(bookmarkId) {
             const loading = document.getElementById('loading');
             const iframe = document.getElementById('sigma-embed');
@@ -1734,13 +1761,10 @@
             loading.style.display = 'flex';
             iframe.style.display = 'none';
             
-            // Determine item type
             const itemType = currentItemType || 'workbook';
             
-            // Build URL for v2 endpoint that supports both types
             let url = `/api/signed-url-v2?email=${encodeURIComponent(currentUserEmail)}&itemType=${itemType}`;
             
-            // Add the appropriate ID parameters based on item type
             if (itemType === 'data-model') {
                 url += `&dataModelId=${currentWorkbookId}&dataModelUrlId=${encodeURIComponent(currentWorkbookUrlId)}`;
             } else {
@@ -1754,7 +1778,8 @@
             console.log('🔧 Requesting signed URL:', url);
             console.log('📝 Item Type:', itemType);
             
-            fetch(url)
+            // Use authenticated fetch
+            authenticatedFetch(url)
                 .then(function(response) {
                     if (!response.ok) {
                         throw new Error('HTTP error! status: ' + response.status);
@@ -1765,7 +1790,6 @@
                     if (data.url) {
                         console.log('✅ Received signed URL:', data.url);
                         
-                        // Verify correct URL type
                         if (itemType === 'data-model' && !data.url.includes('/data-model/')) {
                             console.warn('⚠️ Expected data model URL but got workbook URL');
                         }
@@ -1810,11 +1834,10 @@
                 return;
             }
             
-            // Store the item details in global variables
             currentWorkbookId = item.id;
             currentWorkbookUrlId = item.urlId;
             currentWorkbookName = item.name;
-            currentItemType = item.type; // New: track the item type
+            currentItemType = item.type;
             
             console.log('Loaded item:', {
                 id: currentWorkbookId,
@@ -1823,30 +1846,24 @@
                 type: currentItemType
             });
             
-            // Update the display name with an icon based on type
             const nameElement = document.getElementById('currentWorkbookName');
             if (currentItemType === 'data-model') {
                 nameElement.innerHTML = `<span style="color: #9333ea;">🗃️</span> ${currentWorkbookName}`;
-                // Hide bookmark functionality for data models (they don't support bookmarks)
                 document.querySelectorAll('.bookmark-btn').forEach(btn => {
                     btn.style.display = 'none';
                 });
-                // Also hide scheduler since it depends on bookmarks
                 document.querySelectorAll('[onclick="openSchedulerModal()"]').forEach(btn => {
                     btn.style.display = 'none';
                 });
             } else {
                 nameElement.innerHTML = `<span style="color: #06b6d4;">📊</span> ${currentWorkbookName}`;
-                // Show bookmark functionality for workbooks
                 document.querySelectorAll('.bookmark-btn').forEach(btn => {
                     btn.style.display = 'inline-block';
                 });
-                // Show scheduler for workbooks
                 document.querySelectorAll('[onclick="openSchedulerModal()"]').forEach(btn => {
                     btn.style.display = 'inline-block';
                 });
                 
-                // Initialize bookmark functionality for workbooks
                 fetchUserTeams();
                 loadBookmarks();
             }
