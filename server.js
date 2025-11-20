@@ -1873,6 +1873,105 @@ app.get('/api/signed-url', authenticateToken, async (req, res) => {
         customParams[key] = req.query[key];
       }
     });
+
+
+  // Enhanced version of generateSignedUrl that supports both workbooks and data models
+app.get('/api/signed-url-v2', authenticateToken, async (req, res) => {
+  try {
+    const email = req.user.email;
+    const itemType = req.query.itemType || 'workbook'; // Default to workbook
+    const bookmarkId = req.query.bookmarkId || null;
+    
+    let itemId, itemUrlId;
+    
+    // Get the appropriate IDs based on item type
+    if (itemType === 'data-model') {
+      itemId = req.query.dataModelId;
+      itemUrlId = req.query.dataModelUrlId || itemId;
+    } else {
+      itemId = req.query.workbookId;
+      itemUrlId = req.query.workbookUrlId || itemId;
+    }
+    
+    // Extract standard parameters
+    const standardParams = ['workbookId', 'workbookUrlId', 'dataModelId', 'dataModelUrlId', 'email', 'bookmarkId', 'itemType'];
+    const customParams = {};
+    
+    Object.keys(req.query).forEach(key => {
+      if (!standardParams.includes(key)) {
+        customParams[key] = req.query[key];
+      }
+    });
+    
+    // Clean up URL ID if it contains a full path
+    if (itemUrlId && itemUrlId.includes('/')) {
+      const match = itemUrlId.match(/\/(?:workbook|data-model)\/([^/?#]+)/);
+      if (match && match[1]) {
+        itemUrlId = match[1];
+      }
+    }
+    
+    // If no URL ID and we have an item ID, try to fetch it from Sigma
+    if (!itemUrlId && itemId) {
+      const bearerToken = await getBearerToken();
+      
+      try {
+        if (itemType === 'data-model') {
+          const response = await axios.get(
+            `${SIGMA_DATA_MODELS_URL}/${itemId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${bearerToken}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+          
+          itemUrlId = response.data.dataModelUrlId || response.data.urlId || itemId;
+        } else {
+          const response = await axios.get(
+            `${SIGMA_WORKBOOKS_URL}/${itemId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${bearerToken}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+          
+          itemUrlId = extractWorkbookUrlId(response.data);
+        }
+      } catch (err) {
+        console.error(`Error fetching ${itemType}:`, err.response?.data || err.message);
+        return res.status(500).json({ error: `Failed to fetch ${itemType} details` });
+      }
+    }
+    
+    if (!itemUrlId) {
+      return res.status(400).json({ error: `${itemType === 'data-model' ? 'dataModelId' : 'workbookId'} or corresponding urlId is required` });
+    }
+    
+    // Generate the signed URL with the v2 function that supports both types
+    const signedUrl = await generateSignedUrlV2(itemUrlId, email, bookmarkId, customParams, itemType);
+    
+    res.json({ 
+      url: signedUrl, 
+      [`${itemType === 'data-model' ? 'dataModel' : 'workbook'}Id`]: itemId,
+      [`${itemType === 'data-model' ? 'dataModel' : 'workbook'}UrlId`]: itemUrlId,
+      itemType,
+      email,
+      bookmarkId,
+      customParams,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Signed URL generation failed:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate signed URL', 
+      details: error.message 
+    });
+  }
+});
     
     if (workbookUrlId && workbookUrlId.includes('/')) {
       const match = workbookUrlId.match(/\/workbook\/([^/?#]+)/);
