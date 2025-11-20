@@ -2022,7 +2022,116 @@ app.get('/api/signed-url-v2', authenticateToken, async (req, res) => {
     });
   }
 });
+// Ask Sigma endpoint
+app.get('/api/ask-sigma-url', authenticateToken, async (req, res) => {
+  try {
+    const email = req.user.email;
+    const region = req.query.region || 'East';
+    const environment = req.query.environment || 'Production';
+    const question = req.query.question || '';
+    
+    console.log(`🧠 Generating Ask Sigma URL for ${email}`);
+    console.log(`   Region: ${region}, Environment: ${environment}`);
+    console.log(`   Question: ${question || 'None'}`);
+    
+    const sessionLength = 3600;
+    const time = Math.floor(Date.now() / 1000);
+    const { givenName, familyName } = generateUserAttributes(email);
 
+    const bearerToken = await getBearerToken();
+    
+    // Get user configuration from database
+    const userConfig = await getUserConfig(email);
+    let isInternal = false;
+    let teams = [];
+    let accountType = 'Pro';
+    let userAttributes = {};
+    
+    if (userConfig) {
+      console.log(`👤 Found user configuration for ${email}`);
+      isInternal = userConfig.isInternal;
+      teams = userConfig.teams || [];
+      accountType = userConfig.accountType || 'Pro';
+      userAttributes = userConfig.userAttributes || {};
+    } else {
+      isInternal = await isInternalUser(email, bearerToken);
+      console.log(`👤 No configuration found, checking Sigma: internal = ${isInternal}`);
+    }
+
+    const tokenData = {
+      sub: email,
+      iss: embedClientId,
+      jti: crypto.randomUUID(),
+      iat: time,
+      exp: time + sessionLength
+    };
+
+    if (!isInternal) {
+      console.log(`👤 External user - adding configured attributes`);
+      tokenData.first_name = givenName;
+      tokenData.last_name = familyName;
+      tokenData.account_type = accountType;
+      
+      if (teams.length > 0) {
+        tokenData.teams = teams;
+      }
+      
+      if (Object.keys(userAttributes).length > 0) {
+        tokenData.user_attributes = userAttributes;
+      }
+      
+      console.log(`📋 JWT claims: account_type=${accountType}, teams=${teams.join(',')}`);
+    } else {
+      console.log('🏢 Internal user detected – omitting all optional claims.');
+    }
+
+    const tokenHeader = {
+      algorithm: 'HS256',
+      keyid: embedClientId
+    };
+
+    const token = jwt.sign(tokenData, embedSecret, tokenHeader);
+
+    // Ask Sigma URL format
+    let signedUrl = `https://app.sigmacomputing.com/${sigmaOrg}/ask-sigma`;
+    
+    signedUrl += `?:jwt=${token}`;
+    signedUrl += `&:embed=true`;
+    signedUrl += `&:menu_position=bottom`;
+    signedUrl += `&:enable_inbound_events=true`;
+    signedUrl += `&:enable_outbound_events=true`;
+    signedUrl += `&:show_footer=true`;
+    
+    // Add custom parameters
+    if (region) {
+      signedUrl += `&Region=${encodeURIComponent(region)}`;
+    }
+    if (environment) {
+      signedUrl += `&Environment=${encodeURIComponent(environment)}`;
+    }
+    if (question) {
+      signedUrl += `&question=${encodeURIComponent(question)}`;
+    }
+
+    console.log(`✅ Ask Sigma URL generated successfully`);
+    
+    res.json({ 
+      url: signedUrl,
+      email,
+      region,
+      environment,
+      question,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Ask Sigma URL generation failed:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate Ask Sigma URL', 
+      details: error.message 
+    });
+  }
+});
 // Routes
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
