@@ -622,8 +622,9 @@
             })
             .then(data => {
                 if (data && data.token) {
-                   localStorage.setItem('authToken', data.token);
-                    localStorage.setItem('userEmail', email);
+                localStorage.setItem('userEmail', data.email);
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('sessionToken', data.token);
                     
                     showNotification('Login successful! Redirecting...', 'success');
                     
