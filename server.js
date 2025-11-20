@@ -1873,9 +1873,59 @@ app.get('/api/signed-url', authenticateToken, async (req, res) => {
         customParams[key] = req.query[key];
       }
     });
+    
+    if (workbookUrlId && workbookUrlId.includes('/')) {
+      const match = workbookUrlId.match(/\/workbook\/([^/?#]+)/);
+      if (match && match[1]) {
+        workbookUrlId = match[1];
+      }
+    }
+    
+    if (!workbookUrlId && workbookId) {
+      const bearerToken = await getBearerToken();
+      
+      try {
+        const workbookResponse = await axios.get(
+          `${SIGMA_WORKBOOKS_URL}/${workbookId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${bearerToken}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        
+        workbookUrlId = extractWorkbookUrlId(workbookResponse.data);
+      } catch (err) {
+        console.error('Error fetching workbook:', err.response?.data || err.message);
+        return res.status(500).json({ error: 'Failed to fetch workbook details' });
+      }
+    }
+    
+    if (!workbookUrlId) {
+      return res.status(400).json({ error: 'workbookId or workbookUrlId is required' });
+    }
+    
+    const signedUrl = await generateSignedUrl(workbookUrlId, email, bookmarkId, customParams);
+    res.json({ 
+      url: signedUrl, 
+      workbookId,
+      workbookUrlId: workbookUrlId,
+      email,
+      bookmarkId,
+      customParams,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Signed URL generation failed:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate signed URL', 
+      details: error.message 
+    });
+  }
+});
 
-
-  // Enhanced version of generateSignedUrl that supports both workbooks and data models
+// Enhanced version of generateSignedUrl that supports both workbooks and data models
 app.get('/api/signed-url-v2', authenticateToken, async (req, res) => {
   try {
     const email = req.user.email;
@@ -1959,57 +2009,6 @@ app.get('/api/signed-url-v2', authenticateToken, async (req, res) => {
       [`${itemType === 'data-model' ? 'dataModel' : 'workbook'}Id`]: itemId,
       [`${itemType === 'data-model' ? 'dataModel' : 'workbook'}UrlId`]: itemUrlId,
       itemType,
-      email,
-      bookmarkId,
-      customParams,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('❌ Signed URL generation failed:', error);
-    res.status(500).json({ 
-      error: 'Failed to generate signed URL', 
-      details: error.message 
-    });
-  }
-});
-    
-    if (workbookUrlId && workbookUrlId.includes('/')) {
-      const match = workbookUrlId.match(/\/workbook\/([^/?#]+)/);
-      if (match && match[1]) {
-        workbookUrlId = match[1];
-      }
-    }
-    
-    if (!workbookUrlId && workbookId) {
-      const bearerToken = await getBearerToken();
-      
-      try {
-        const workbookResponse = await axios.get(
-          `${SIGMA_WORKBOOKS_URL}/${workbookId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${bearerToken}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        
-        workbookUrlId = extractWorkbookUrlId(workbookResponse.data);
-      } catch (err) {
-        console.error('Error fetching workbook:', err.response?.data || err.message);
-        return res.status(500).json({ error: 'Failed to fetch workbook details' });
-      }
-    }
-    
-    if (!workbookUrlId) {
-      return res.status(400).json({ error: 'workbookId or workbookUrlId is required' });
-    }
-    
-    const signedUrl = await generateSignedUrl(workbookUrlId, email, bookmarkId, customParams);
-    res.json({ 
-      url: signedUrl, 
-      workbookId,
-      workbookUrlId: workbookUrlId,
       email,
       bookmarkId,
       customParams,
