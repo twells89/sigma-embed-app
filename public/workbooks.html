@@ -722,18 +722,55 @@
         let currentFilter = 'all';
 
         function checkAuthentication() {
+            const sessionToken = localStorage.getItem('sessionToken');
             const userEmail = localStorage.getItem('userEmail');
-            if (!userEmail) {
+            
+            if (!sessionToken || !userEmail) {
                 window.location.href = '/login';
                 return false;
             }
-            currentUserEmail = userEmail;
-            document.getElementById('userEmail').textContent = userEmail;
+            
+            // Verify session is still valid
+            fetch('/api/verify-session', {
+                headers: {
+                    'Authorization': `Bearer ${sessionToken}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Session invalid');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.valid) {
+                    localStorage.clear();
+                    window.location.href = '/login';
+                } else {
+                    currentUserEmail = data.email;
+                    document.getElementById('userEmail').textContent = data.email;
+                    loadItems(); // Load items after successful authentication
+                }
+            })
+            .catch(error => {
+                console.error('Session verification failed:', error);
+                localStorage.clear();
+                window.location.href = '/login';
+            });
+            
             return true;
         }
 
         function logout() {
             localStorage.removeItem('userEmail');
+            localStorage.removeItem('sessionToken');
+            localStorage.removeItem('selectedWorkbookId');
+            localStorage.removeItem('selectedWorkbookUrlId');
+            localStorage.removeItem('selectedWorkbookName');
+            localStorage.removeItem('selectedDataModelId');
+            localStorage.removeItem('selectedDataModelUrlId');
+            localStorage.removeItem('selectedDataModelName');
+            localStorage.removeItem('selectedItemType');
             showNotification('Logged out successfully', 'success');
             setTimeout(() => {
                 window.location.href = '/login';
@@ -1093,7 +1130,28 @@
             try {
                 console.log('📚 Fetching workbooks and data models for:', currentUserEmail);
                 
-                const response = await fetch(`/api/items?email=${encodeURIComponent(currentUserEmail)}`);
+                // Get session token for authentication
+                const sessionToken = localStorage.getItem('sessionToken');
+                if (!sessionToken) {
+                    console.error('No session token found');
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                const response = await fetch(`/api/items`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${sessionToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.status === 401) {
+                    console.error('Authentication failed - redirecting to login');
+                    localStorage.clear();
+                    window.location.href = '/login';
+                    return;
+                }
                 
                 if (!response.ok) {
                     throw new Error('Failed to fetch items');
@@ -1152,11 +1210,8 @@
         }
         
         document.addEventListener('DOMContentLoaded', function() {
-            if (!checkAuthentication()) {
-                return;
-            }
             createParticles();
-            loadItems();
+            checkAuthentication(); // This will verify session and call loadItems
         });
     </script>
 </body>
