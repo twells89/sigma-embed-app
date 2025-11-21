@@ -728,17 +728,23 @@
 
         function checkAuthentication() {
             const userEmail = localStorage.getItem('userEmail');
-            if (!userEmail) {
+            const authToken = localStorage.getItem('authToken');
+            
+            if (!userEmail || !authToken) {
+                console.log('❌ No authentication found, redirecting to login...');
                 window.location.href = '/login';
                 return false;
             }
+            
             currentUserEmail = userEmail;
             document.getElementById('userEmail').textContent = userEmail;
+            console.log('✅ Authenticated as:', userEmail);
             return true;
         }
 
         function logout() {
             localStorage.removeItem('userEmail');
+            localStorage.removeItem('authToken');
             showNotification('Logged out successfully', 'success');
             setTimeout(() => {
                 window.location.href = '/login';
@@ -794,7 +800,7 @@
             }
             
             loadAskSigma(question);
-            input.value = ''; // Clear the input after asking
+            input.value = '';
         }
         
         function loadAskSigma(question) {
@@ -820,12 +826,33 @@
             
             showNotification('Loading Ask Sigma with your question...', 'success');
             
-            // Get signed URL for Ask Sigma with user email
-            const url = `/api/ask-sigma-url?region=${region}&environment=${environment}&question=${encodeURIComponent(question)}&email=${encodeURIComponent(currentUserEmail)}`;
+            // Get auth token
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) {
+                showNotification('Authentication required', 'error');
+                window.location.href = '/login';
+                return;
+            }
             
-            fetch(url)
+            // Get signed URL for Ask Sigma (email comes from token, not query param)
+            const url = `/api/ask-sigma-url?region=${region}&environment=${environment}&question=${encodeURIComponent(question)}`;
+            
+            fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            })
                 .then(function(response) {
                     if (!response.ok) {
+                        if (response.status === 401 || response.status === 403) {
+                            localStorage.removeItem('authToken');
+                            localStorage.removeItem('userEmail');
+                            showNotification('Session expired. Please log in again.', 'error');
+                            setTimeout(() => {
+                                window.location.href = '/login';
+                            }, 2000);
+                            throw new Error('Authentication failed');
+                        }
                         throw new Error('HTTP error! status: ' + response.status);
                     }
                     return response.json();
