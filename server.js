@@ -2102,6 +2102,10 @@ app.get('/api/ask-sigma-url', authenticateToken, async (req, res) => {
     signedUrl += `&:enable_inbound_events=true`;
     signedUrl += `&:enable_outbound_events=true`;
     signedUrl += `&:show_footer=true`;
+
+       // Apply PLUGS theme to Ask Sigma
+    signedUrl += `&:theme=PLUGS`;
+    console.log('🎨 Applied PLUGS theme to Ask Sigma');
     
     // Add custom parameters
     if (region) {
