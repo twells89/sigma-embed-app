@@ -2093,7 +2093,7 @@ app.get('/api/ask-sigma-url', authenticateToken, async (req, res) => {
     const token = jwt.sign(tokenData, embedSecret, tokenHeader);
 
     // Ask Sigma URL format
-    let signedUrl = `https://app.sigmacomputing.com/${sigmaOrg}/ask`;
+    let signedUrl = `https://app.sigmacomputing.com/${sigmaOrg}/ask/answer`;
     
     signedUrl += `?:jwt=${token}`;
     signedUrl += `&:embed=true`;
