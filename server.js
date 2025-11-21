@@ -2092,12 +2092,13 @@ app.get('/api/ask-sigma-url', authenticateToken, async (req, res) => {
 
     const token = jwt.sign(tokenData, embedSecret, tokenHeader);
 
-    // Ask Sigma URL format
+    // Ask Sigma URL format - use /ask/answer path
     let signedUrl = `https://app.sigmacomputing.com/${sigmaOrg}/ask/answer`;
     
     signedUrl += `?:jwt=${token}`;
     signedUrl += `&:embed=true`;
     signedUrl += `&:menu_position=bottom`;
+    signedUrl += `&:responsive_height=true`;
     signedUrl += `&:enable_inbound_events=true`;
     signedUrl += `&:enable_outbound_events=true`;
     signedUrl += `&:show_footer=true`;
@@ -2109,8 +2110,9 @@ app.get('/api/ask-sigma-url', authenticateToken, async (req, res) => {
     if (environment) {
       signedUrl += `&Environment=${encodeURIComponent(environment)}`;
     }
+    // Use 'search' parameter instead of 'question' to match local app
     if (question) {
-      signedUrl += `&question=${encodeURIComponent(question)}`;
+      signedUrl += `&search=${encodeURIComponent(question)}`;
     }
 
     console.log(`✅ Ask Sigma URL generated successfully`);
