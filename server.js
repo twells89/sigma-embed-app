@@ -1857,6 +1857,21 @@ app.get('/api/items', authenticateToken, async (req, res) => {
   }
 });
 
+// Get user teams endpoint
+app.get('/api/user/teams', authenticateToken, async (req, res) => {
+  const email = req.query.email || req.user.email;
+  
+  try {
+    const bearerToken = await getBearerToken();
+    const teams = await getUserTeams(email, bearerToken);
+    
+    res.json({ teams });
+  } catch (error) {
+    console.error('Error fetching user teams:', error);
+    res.status(500).json({ error: 'Failed to fetch user teams', teams: [] });
+  }
+});
+
 // Get signed URL with workbook and optional bookmark
 app.get('/api/signed-url', authenticateToken, async (req, res) => {
   try {
